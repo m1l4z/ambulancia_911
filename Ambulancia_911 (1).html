@@ -1,0 +1,764 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Ambulancia 911</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--fg:#f4f7fb;--ac:#ff3b4e;--bl:#2f8cff;--pn:rgba(48,36,96,.86);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font:15px system-ui,sans-serif;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block}
+.hud{position:fixed;pointer-events:none;text-shadow:0 1px 3px #000}
+#spd{left:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);font-size:13px}#clk{left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 8px);text-align:center;font-size:12px;font-weight:700}#ck{display:block;margin:0 auto}#spd b{font-size:34px}#sc{display:block;font-weight:600;color:#ffd0e8}
+#mm{left:10px;top:calc(env(safe-area-inset-top,0px) + 10px);border-radius:50%;background:#0008;border:2px solid #fff4;width:120px;height:120px}
+#mis{left:140px;top:calc(env(safe-area-inset-top,0px) + 14px);max-width:34vw;font-weight:600}
+#toast{left:50%;top:22%;transform:translateX(-50%);font-size:20px;font-weight:700;text-align:center;opacity:0;transition:opacity .4s;max-width:80vw}
+#sw{left:50%;bottom:14%;width:130px;height:130px;margin-left:-65px;border:12px solid #111c;border-radius:50%;display:none}
+#sw:before{content:"";position:absolute;left:50%;top:50%;width:110px;height:10px;background:#111c;margin:-5px -55px}
+#tb{position:fixed;right:10px;top:calc(env(safe-area-inset-top,0px) + 10px);display:flex;gap:8px}
+.t,.b,.m{border:0;color:var(--fg);background:#16223acc;border:2px solid #fff3;border-radius:14px;font-size:20px;touch-action:none}
+.t{width:46px;height:46px}.on{background:var(--ac)!important}
+#mob{display:none}
+#mob .b{position:fixed;border-radius:50%;font-weight:800;font-size:15px}
+#gas{right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);width:112px;height:112px;background:#1fa35acc}
+#brk{right:140px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);width:84px;height:84px;background:#c0392bcc}
+#hrn{right:24px;bottom:calc(env(safe-area-inset-bottom,0px) + 140px);width:56px;height:56px}
+#lft{left:18px;bottom:calc(env(safe-area-inset-bottom,0px) + 60px);width:84px;height:84px}
+#rgt{left:118px;bottom:calc(env(safe-area-inset-bottom,0px) + 60px);width:84px;height:84px}
+#rm{position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:center;pointer-events:none;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px)}#rm .p{pointer-events:auto;width:min(600px,94vw);max-height:56vh;overflow:auto;padding:14px 16px;background:linear-gradient(135deg,#fff3fbf2,#e6f3ffee);color:#3a2f6b;border:2px solid #ff9fd0;box-shadow:0 8px 30px #ff7ab855;text-align:left}#rm .p h1{color:#d6338a;text-shadow:none;font-style:normal}#rg{font-size:12px;font-weight:700;color:#d6338a}#rd{display:flex;gap:5px;margin:4px 0 6px}#rd i{flex:1;height:6px;border-radius:4px;background:#e3d9ff}#rd i.d{background:#7ad9b0}#rd i.c{background:#ff7ab8}#rq{font-size:16px!important;color:#3a2f6b}#ro{counter-reset:o}#rm .m{padding:10px 10px 10px 44px;margin:6px 0;font-size:14px;text-align:left;position:relative;background:#fff;color:#3a2f6b;border:2px solid #ffd0e8;border-radius:14px}#rm .m:before{counter-increment:o;content:counter(o,upper-alpha);position:absolute;left:8px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:50%;background:#ffd0e8;display:flex;align-items:center;justify-content:center;font-weight:800}#rm .m.pri:before{content:"➜"}#rm .m.ok{background:#c9f5df;border-color:#4fd196}#rm .m.bad{background:#ffd9df;border-color:#ff6b8a}#rm .m.pri{background:#ff7ab8;color:#fff;border-color:#ff4fa3}#rf{font-size:13px!important}
+#menu{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(#9b7bffcc,#2a1f6aee)}
+.p{background:var(--pn);border:1px solid #ff5fb0aa;box-shadow:0 0 24px #20e8ff44;border-radius:18px;padding:22px;width:min(420px,88vw);max-height:84vh;overflow:auto;text-align:center}
+.p h1{margin:0 0 4px;font-size:30px;font-style:italic;letter-spacing:2px;color:#ff5fb0;text-shadow:0 0 8px #ff2d95,0 0 22px #20e8ff}.p p{opacity:.75;margin:0 0 16px}
+.m{display:block;width:100%;padding:13px;margin:9px 0;font-size:17px}.m.pri{background:var(--ac)}
+.p ul{text-align:left;padding-left:18px;line-height:1.55;font-size:14px}.p label{display:block;text-align:left;margin:12px 0}
+#ed{position:fixed;left:0;top:0;bottom:0;width:min(350px,58vw);overflow-y:auto;background:linear-gradient(180deg,#fff3fbf2,#e6f3fff2);color:#3a2f6b;padding:calc(env(safe-area-inset-top,0px) + 10px) 12px 14px;touch-action:pan-y;z-index:5;box-sizing:border-box}#ed h2{margin:0 0 6px;font-size:17px;color:#d6338a}.er{margin:8px 0}.er b{display:block;font-size:12px;margin-bottom:4px}.sw{display:flex;flex-wrap:wrap;gap:5px}.sw button{width:26px;height:26px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #b8a7e8;background-size:cover}.sw button.on{box-shadow:0 0 0 3px #ff4fa3}.cy{display:flex;align-items:center;gap:6px}.cy button{width:30px;height:30px;border-radius:50%;border:0;background:#ffd0e8;color:#3a2f6b}.cy span{flex:1;text-align:center;font-weight:600;font-size:13px}#lg input{width:100%;padding:10px;margin:6px 0;border-radius:12px;border:2px solid #ffc6e2;font-size:16px;box-sizing:border-box}
+#rm .p{max-height:46vh;background:linear-gradient(160deg,#2a1d5cf2,#0f2b4cf2);color:#fff;border:2px solid #ff7ab8;border-radius:22px;box-shadow:0 10px 40px #000a,0 0 30px #ff7ab855;animation:up .35s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+#rm .p h1{color:#ffd0e8}#rg{color:#7ae8ff!important}#rq{color:#fff!important;font-size:17px!important;line-height:1.35}#rf{color:#d6f5ff}
+#vt{display:flex;gap:6px;margin:6px 0}#vt span{flex:1;background:#ffffff14;border:1px solid #ffffff22;border-radius:10px;padding:4px 6px;font-size:11px;text-align:center}#vt b{display:block;font-size:16px}#vt .al b{color:#ff5a6e;animation:bl .6s infinite alternate}
+@keyframes bl{to{opacity:.3}}@keyframes pop{50%{transform:scale(1.03)}}@keyframes shk{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+#rm .m{background:#ffffff12;color:#fff;border:2px solid #ffffff2a;transition:transform .15s,background .15s}
+#rm .m:hover:not(:disabled){transform:translateX(4px);background:#ff7ab833}
+#rm .m:before{background:linear-gradient(135deg,#ff7ab8,#7a5cff);color:#fff}
+#rm .m.ok{background:#1fa35a77;border-color:#4fd196;animation:pop .3s}
+#rm .m.bad{background:#c0392b77;border-color:#ff6b8a;animation:shk .3s}
+#rm .m.pri{background:linear-gradient(90deg,#ff3b4e,#ff7ab8);border:0}
+#rd i{background:#ffffff22}#rd i.d{background:#4fd196}#rd i.c{background:#ff7ab8}
+#rm{align-items:center;justify-content:flex-start;padding:0 0 0 10px}
+#rm .p{width:min(236px,46vw);max-height:80vh;padding:11px}
+#rm .p h1{font-size:13px!important}#rq{font-size:14px!important}#rm .m{font-size:13px;padding:8px 8px 8px 38px;margin:5px 0}#rf{font-size:12px!important}
+#vt span{font-size:9px;padding:3px 2px}#vt b{font-size:13px}#vt{gap:4px}
+#nl{transform:translate(-50%,-100%);background:#000b;padding:2px 10px;border-radius:10px;font-weight:700;font-size:13px;border:1px solid #ff7ab8;white-space:nowrap;z-index:3}
+#dp{position:fixed;right:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);display:grid;grid-template-columns:repeat(3,54px);gap:6px;z-index:4}
+#dp button{width:54px;height:54px;border-radius:14px;border:2px solid #fff4;background:#16223acc;color:#fff;font-size:20px;touch-action:none}
+#dU{grid-column:2;grid-row:1}#dL{grid-column:1;grid-row:2}#dD{grid-column:2;grid-row:2}#dR{grid-column:3;grid-row:2}
+#eb{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:calc(env(safe-area-inset-top,0px) + 8px) 16px 8px;background:#fffffff2;z-index:6;color:#2b7bd6}
+#eb button{background:none;border:0;color:#2b7bd6;font:700 16px system-ui}#eb b{color:#3a2f6b}
+#ed{left:0;right:0;top:auto;bottom:0;width:auto;height:46vh;padding:0;display:flex;flex-direction:column;overflow:hidden;background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -6px 24px #0007}
+#etb{display:flex;border-bottom:1px solid #e3e3ea;flex:none}
+#etb button{flex:1;background:none;border:0;border-bottom:3px solid transparent;padding:6px 0;color:#8a8fa6;font-size:10px}#etb i{display:block;font-style:normal;font-size:21px}#etb button.on{color:#2b7bd6;border-color:#2b7bd6}
+#eg{flex:1;overflow-y:auto;padding:4px 10px 16px;touch-action:pan-y}
+.et{font-weight:700;font-size:12px;margin:10px 0 6px;color:#5b5f7a}
+.tg{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}
+.tb{aspect-ratio:1;border:2px solid #e3e3ea;border-radius:12px;background-color:#dcecff;background-size:cover;background-position:center;position:relative;padding:0}
+.tb span{position:absolute;left:0;right:0;bottom:0;font-size:10px;background:#ffffffdd;color:#3a2f6b;border-radius:0 0 10px 10px;padding:1px}
+.tb.on{border-color:#6cc04a;box-shadow:0 0 0 2px #6cc04a}
+.sw2{display:flex;gap:8px}.sw2 button{flex:1;padding:10px;border-radius:12px;border:2px solid #e3e3ea;background:#fff;color:#3a2f6b;font-weight:600}.sw2 button.on{border-color:#6cc04a;background:#effaea}
+.bb{position:fixed;transform:translate(-50%,-100%);background:#fff;color:#3a2f6b;padding:8px 12px;border-radius:14px;font-size:13px;font-weight:600;max-width:230px;box-shadow:0 4px 14px #0007;border:2px solid #ff7ab8;z-index:3;pointer-events:none;animation:pop .3s}.bb:after{content:"";position:absolute;left:50%;bottom:-10px;margin-left:-8px;border:8px solid transparent;border-top-color:#ff7ab8;border-bottom:0}#bp{border-color:#20b8d8}#bp:after{border-top-color:#20b8d8}.bb small{display:block;font-size:10px;opacity:.7;margin-bottom:2px}
+#hn{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 90px);background:#000b;color:#fff;padding:8px 14px;border-radius:12px;font-weight:700;font-size:14px;z-index:3;pointer-events:none;text-align:center;max-width:70vw}
+#nt{left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 8px);width:min(290px,40vw);background:linear-gradient(135deg,#ff3b4e,#b2245e);border-radius:14px;padding:8px 12px;box-shadow:0 6px 20px #0009;border:1px solid #fff5;animation:ntin .4s ease-out;z-index:4}#nt b,#nt span,#nt em{display:block;font-style:normal;font-size:12px;padding-right:46px}#nt b{font-size:13px}#nt strong{position:absolute;right:10px;top:6px;font-size:24px}#nt u{display:block;height:5px;background:#0006;border-radius:3px;margin-top:5px;overflow:hidden}#nt i{display:block;height:100%;background:#ffd23f;width:100%}@keyframes ntin{from{transform:translate(-50%,-30px);opacity:0}}
+#nt{background:#fff;color:#1a2744;border:0;border-left:6px solid #e5233b;width:min(300px,42vw);box-shadow:0 8px 24px #000a;text-shadow:none;transition:all .3s}#nt b{color:#e5233b;font-weight:800}#nt span{font-weight:700;font-size:13px}#nt em{color:#4a5675;font-weight:600}#nt strong{color:#e5233b}#nt u{background:#e3e8f4}#nt i{background:#2f8cff}#nt.mini{width:auto;min-width:170px;padding:5px 12px}#nt.mini b,#nt.mini span{display:none}
+.bb{width:max-content;min-width:200px;max-width:min(420px,70vw);padding:9px 16px;font-size:14px}
+#qtb u{display:block;height:6px;background:#ffffff22;border-radius:4px;overflow:hidden;margin:2px 0 4px}#qtb i{display:block;height:100%;background:#7ae8ff;width:100%}#qtb b{font-size:12px;color:#ffd23f}
+
+#cover{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:calc(env(safe-area-inset-top,0px) + 8px) 12px calc(env(safe-area-inset-bottom,0px) + 8px);background:radial-gradient(circle at 50% 30%,#4a2f9a,#160f3a 75%);transition:opacity .7s;overflow:hidden;text-align:center;touch-action:manipulation}
+#cover.out{opacity:0;pointer-events:none}
+#cover h1{margin:0;font-size:clamp(26px,6vw,46px);font-style:italic;letter-spacing:3px;color:#fff;text-shadow:0 0 10px #ff2d95,0 0 28px #20e8ff}
+#cover h1 span{color:#ff5fb0}
+#cover .sub{margin:0;font-size:clamp(12px,2.4vw,16px);letter-spacing:2px;opacity:.85}
+#cv{width:min(96vw,860px,calc((100vh - 190px)*1.78));border-radius:20px;overflow:hidden;box-shadow:0 0 0 3px #ffffff33,0 12px 50px #000b,0 0 40px #ff5fb055;line-height:0}
+#cv svg{width:100%;height:auto}
+#cgo{width:min(320px,80vw);padding:14px;font-size:20px;font-weight:800;letter-spacing:2px;border-radius:30px;background:linear-gradient(90deg,#ff3b4e,#ff5fb0);box-shadow:0 6px 24px #ff3b4e88;animation:pls 1.4s infinite alternate}
+#cgo:disabled{opacity:.5;animation:none}
+#cst{font-size:12px;opacity:.8;min-height:16px}
+@keyframes pls{to{transform:scale(1.05)}}
+.fl1{animation:fl .5s steps(1) infinite}.fl2{animation:fl .5s steps(1) infinite reverse}
+@keyframes fl{50%{opacity:.15}}
+.wv{transform-box:fill-box;transform-origin:50% 8%;animation:wv 1.1s ease-in-out infinite alternate}
+@keyframes wv{from{transform:rotate(-8deg)}to{transform:rotate(14deg)}}
+.bob{animation:bob 2.2s ease-in-out infinite alternate}@keyframes bob{to{transform:translateY(-4px)}}
+.wsp{transform-box:fill-box;transform-origin:center;animation:ws 1s linear infinite}@keyframes ws{to{transform:rotate(360deg)}}
+[hidden]{display:none!important}
+</style></head><body>
+<canvas id="c"></canvas>
+<canvas id="mm" class="hud" width="120" height="120"></canvas>
+<div id="mis" class="hud">Conducción libre</div>
+<div id="spd" class="hud"><b id="kmh">0</b> km/h · <span id="sc">0 pts</span></div>
+<div id="clk" class="hud"><canvas id="ck" width="64" height="64"></canvas><div id="ct"></div></div>
+<div id="toast" class="hud"></div><div id="sw" class="hud"></div>
+<div id="tb"><button class="t" id="bSir">🚨</button><button class="t" id="bCam">📷</button><button class="t" id="bMis">🎯</button><button class="t" id="bGy">📱</button><button class="t" id="bCal">⟲</button><button class="t" id="bPau">⏸</button></div>
+<div id="mob"><button class="b" id="lft">◀</button><button class="b" id="rgt">▶</button><button class="b" id="hrn">📯</button><button class="b" id="brk">FRENO</button><button class="b" id="gas">ACEL.</button></div>
+<div id="rm" hidden><button class="t" id="rv" title="Ver sala" style="position:fixed;right:10px;top:calc(env(safe-area-inset-top,0px) + 10px);pointer-events:auto">👁</button><div class="p" id="rpn"><div id="rg"></div><div id="vt"></div><h1 id="rt" style="font-size:16px;margin:2px 0"></h1><div id="rd"></div><p id="rq" style="opacity:1;font-weight:600"></p><div id="qtb" hidden><b id="qtn"></b><u><i id="qtf"></i></u></div><div id="ro"></div><p id="rf" style="margin:6px 0 0"></p></div></div>
+<div id="nl" class="hud" hidden></div><div id="nt" class="hud" hidden><b id="ntk"></b><span id="ntd"></span><em id="ntl"></em><strong id="ntt"></strong><u><i id="ntf"></i></u></div><div id="bo" class="bb" hidden></div><div id="bp" class="bb" hidden></div><div id="hn" hidden></div><div id="dp" hidden><button id="dU">▲</button><button id="dL">◀</button><button id="dD">▼</button><button id="dR">▶</button></div><div id="eb" hidden><button id="ebk">‹ Volver</button><b id="ebn"></b><button id="ebs">Guardar</button></div><div id="ed" hidden></div>
+<div id="cover"><h1>🚑 AMBULANCIA <span>911</span></h1><p class="sub">CIUDAD TROPICAL · AÑOS 80 · MUNDO ABIERTO</p>
+<div id="cv"><svg viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Paramédico con gorra y mascarilla frente a una ambulancia">
+<defs><linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a1f6a"/><stop offset=".5" stop-color="#b0409c"/><stop offset=".8" stop-color="#ff7a8a"/><stop offset="1" stop-color="#ffc06b"/></linearGradient>
+<linearGradient id="sn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe14d"/><stop offset="1" stop-color="#ff3b8e"/></linearGradient>
+<linearGradient id="bd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".7" stop-color="#e6ebf3"/><stop offset="1" stop-color="#b9c3d3"/></linearGradient>
+<linearGradient id="gl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bfe8ff"/><stop offset="1" stop-color="#3f78b5"/></linearGradient>
+<linearGradient id="un" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1a3263"/><stop offset=".5" stop-color="#27498c"/><stop offset="1" stop-color="#1a3263"/></linearGradient>
+<radialGradient id="hl"><stop offset="0" stop-color="#fff6c0"/><stop offset="1" stop-color="#fff6c000"/></radialGradient>
+<clipPath id="sunclip"><circle cx="330" cy="84" r="62"/></clipPath></defs>
+<rect width="640" height="360" fill="url(#sk)"/>
+<g clip-path="url(#sunclip)"><rect x="260" y="20" width="160" height="130" fill="url(#sn)"/><g fill="#b0409c"><rect x="260" y="88" width="160" height="3"/><rect x="260" y="102" width="160" height="5"/><rect x="260" y="118" width="160" height="7"/></g></g>
+<g fill="#2b1a5e" opacity=".85"><rect x="0" y="190" width="40" height="110"/><rect x="46" y="150" width="34" height="150"/><rect x="86" y="205" width="50" height="95"/><rect x="500" y="170" width="44" height="130"/><rect x="550" y="140" width="38" height="160"/><rect x="594" y="195" width="46" height="105"/></g>
+<g fill="#ffe9a8" opacity=".7"><rect x="52" y="162" width="5" height="6"/><rect x="64" y="180" width="5" height="6"/><rect x="560" y="156" width="5" height="6"/><rect x="570" y="176" width="5" height="6"/><rect x="510" y="186" width="5" height="6"/></g>
+<g fill="#1b1040"><path d="M30 300 Q34 230 28 190" stroke="#1b1040" stroke-width="6" fill="none"/><path d="M28 190 q-30 -6 -40 14 q24 -10 40 -4 q-16 -22 -34 -22 q26 -2 34 12 q8 -26 30 -30 q-18 12 -20 28 q22 -14 42 -2 q-24 -4 -42 14z"/>
+<path d="M610 300 Q606 240 614 200" stroke="#1b1040" stroke-width="6" fill="none"/><path d="M614 200 q-30 -6 -40 14 q24 -10 40 -4 q-16 -22 -34 -22 q26 -2 34 12 q8 -26 30 -30 q-18 12 -20 28 q22 -14 42 -2 q-24 -4 -42 14z"/></g>
+<rect y="290" width="640" height="70" fill="#34324a"/><rect y="290" width="640" height="4" fill="#ff5fb0"/><g fill="#e9e3c8"><rect x="20" y="326" width="60" height="5"/><rect x="130" y="326" width="60" height="5"/><rect x="240" y="326" width="60" height="5"/><rect x="350" y="326" width="60" height="5"/><rect x="460" y="326" width="60" height="5"/><rect x="570" y="326" width="60" height="5"/></g>
+<ellipse cx="270" cy="302" rx="230" ry="14" fill="#0007"/>
+<g id="amb"><path d="M52 132 Q52 120 66 120 H352 V300 H52Z" fill="url(#bd)" stroke="#8a95a8" stroke-width="2"/>
+<path d="M352 120 H404 Q424 120 436 150 L462 196 Q474 212 474 232 V290 Q474 300 464 300 H352Z" fill="url(#bd)" stroke="#8a95a8" stroke-width="2"/>
+<path d="M364 134 H402 Q414 134 422 152 L442 192 H364Z" fill="url(#gl)" stroke="#5a6d88" stroke-width="2"/><path d="M372 140 L396 140 L376 188 L372 188Z" fill="#fff" opacity=".35"/>
+<path d="M52 236 H474 V256 H52Z" fill="#e5233b"/><path d="M52 232 H474" stroke="#fff" stroke-width="3"/><path d="M52 260 H474" stroke="#1d4fa8" stroke-width="3"/>
+<text x="196" y="251" font-family="system-ui,sans-serif" font-weight="800" font-size="15" letter-spacing="3" fill="#fff" text-anchor="middle">AMBULANCIA · 911</text>
+<g transform="translate(128 178)"><rect x="-14" y="-40" width="28" height="80" rx="5" fill="#e5233b"/><rect x="-40" y="-14" width="80" height="28" rx="5" fill="#e5233b"/><rect x="-14" y="-40" width="28" height="80" rx="5" fill="none" stroke="#fff" stroke-width="2"/></g>
+<rect x="228" y="140" width="96" height="62" rx="8" fill="url(#gl)" stroke="#5a6d88" stroke-width="2"/><path d="M276 140 V202" stroke="#5a6d88" stroke-width="2"/>
+<path d="M72 122 V298 M214 128 V228" stroke="#aab4c6" stroke-width="2"/><rect x="204" y="188" width="8" height="14" rx="3" fill="#8a95a8"/>
+<rect x="352" y="104" width="62" height="18" rx="6" fill="#2a3550"/><rect x="356" y="107" width="26" height="12" rx="4" fill="#ff2a3c" class="fl1"/><rect x="386" y="107" width="24" height="12" rx="4" fill="#2f8cff" class="fl2"/>
+<circle cx="369" cy="113" r="26" fill="#ff2a3c" opacity=".22" class="fl1"/><circle cx="398" cy="113" r="26" fill="#2f8cff" opacity=".25" class="fl2"/>
+<rect x="40" y="114" width="14" height="8" rx="3" fill="#ff2a3c" class="fl1"/><rect x="452" y="262" width="30" height="14" rx="5" fill="#8a95a8"/><rect x="40" y="288" width="24" height="12" rx="4" fill="#8a95a8"/>
+<ellipse cx="470" cy="214" rx="9" ry="12" fill="#fff6c0"/><circle cx="486" cy="214" r="50" fill="url(#hl)" opacity=".8"/>
+<g><circle cx="120" cy="300" r="34" fill="#15151c"/><circle cx="120" cy="300" r="21" fill="#c9d1de" stroke="#8a95a8" stroke-width="3"/><g class="wsp"><path d="M120 284V316M104 300H136" stroke="#6b7690" stroke-width="4"/></g><circle cx="120" cy="300" r="5" fill="#6b7690"/>
+<circle cx="408" cy="300" r="34" fill="#15151c"/><circle cx="408" cy="300" r="21" fill="#c9d1de" stroke="#8a95a8" stroke-width="3"/><g class="wsp"><path d="M408 284V316M392 300H424" stroke="#6b7690" stroke-width="4"/></g><circle cx="408" cy="300" r="5" fill="#6b7690"/></g></g>
+<g transform="translate(520 0)"><g class="bob">
+<ellipse cx="0" cy="338" rx="62" ry="9" fill="#0008"/>
+<rect x="-34" y="250" width="30" height="82" rx="6" fill="#142a55"/><rect x="4" y="250" width="30" height="82" rx="6" fill="#142a55"/><path d="M0 256V332" stroke="#0b1a38" stroke-width="3"/><path d="M-34 322H-4M4 322H34" stroke="#0b1a38" stroke-width="3"/>
+<path d="M-40 330H-2V344Q-2 350 -8 350H-44Q-50 350 -48 342Z" fill="#111"/><path d="M40 330H2V344Q2 350 8 350H44Q50 350 48 342Z" fill="#111"/><path d="M-44 344H-4M4 344H44" stroke="#555" stroke-width="3"/><path d="M-40 335Q-30 333 -20 336M40 335Q30 333 20 336" stroke="#ffffff55" stroke-width="2" fill="none"/>
+<rect x="-50" y="150" width="100" height="112" rx="12" fill="url(#un)"/><rect x="-50" y="252" width="100" height="12" fill="#2a1a10"/><rect x="-8" y="250" width="16" height="16" rx="3" fill="#e4b84c"/><rect x="-4" y="254" width="8" height="8" rx="2" fill="#2a1a10"/>
+<rect x="-50" y="226" width="100" height="8" fill="#e8eef7"/><rect x="-50" y="226" width="100" height="2" fill="#fff"/>
+<path d="M-12 150 L0 176 L12 150Z" fill="#e8eef7"/><path d="M-26 148 L-6 148 L0 176 L-14 160Z M26 148 L6 148 L0 176 L14 160Z" fill="#f4f7fc" stroke="#c4cddd"/>
+<path d="M0 176V252" stroke="#0e2147" stroke-width="2"/><g fill="#e4b84c"><circle cx="0" cy="190" r="3"/><circle cx="0" cy="206" r="3"/><circle cx="0" cy="222" r="3"/></g>
+<rect x="-46" y="150" width="30" height="9" rx="3" fill="#e4b84c"/><rect x="16" y="150" width="30" height="9" rx="3" fill="#e4b84c"/><path d="M-40 154H-22M22 154H40" stroke="#1a3263" stroke-width="2"/>
+<circle cx="26" cy="190" r="12" fill="#fff"/><rect x="24" y="182" width="4" height="16" fill="#e5233b"/><rect x="18" y="188" width="16" height="4" fill="#e5233b"/>
+<rect x="-42" y="184" width="30" height="12" rx="2" fill="#fff"/><path d="M-39 188H-18M-39 192H-26" stroke="#4a5675" stroke-width="2"/>
+<path d="M-22 152Q-30 222 0 228Q30 222 22 152" fill="none" stroke="#222" stroke-width="4"/><circle cx="0" cy="230" r="8" fill="#c9d1de" stroke="#555" stroke-width="2"/><circle cx="0" cy="230" r="3" fill="#555"/>
+<rect x="-78" y="156" width="28" height="94" rx="13" fill="url(#un)"/><rect x="-78" y="226" width="28" height="8" fill="#e8eef7"/><circle cx="-64" cy="258" r="12" fill="#f1c9a5"/>
+<g class="wv"><rect x="50" y="156" width="28" height="94" rx="13" fill="url(#un)"/><rect x="50" y="226" width="28" height="8" fill="#e8eef7"/><circle cx="64" cy="258" r="12" fill="#f1c9a5"/></g>
+<rect x="-10" y="132" width="20" height="22" fill="#e2b48c"/>
+<rect x="-36" y="68" width="72" height="72" rx="18" fill="#f1c9a5"/><rect x="-40" y="100" width="8" height="18" rx="4" fill="#e2b48c"/><rect x="32" y="100" width="8" height="18" rx="4" fill="#e2b48c"/>
+<path d="M-34 104Q-48 110 -40 122M34 104Q48 110 40 122" stroke="#bfe8ff" stroke-width="2" fill="none"/>
+<g><ellipse cx="-14" cy="98" rx="8" ry="6" fill="#fff"/><ellipse cx="14" cy="98" rx="8" ry="6" fill="#fff"/><circle cx="-13" cy="98" r="4" fill="#3a2210"/><circle cx="15" cy="98" r="4" fill="#3a2210"/><circle cx="-12" cy="96" r="1.4" fill="#fff"/><circle cx="16" cy="96" r="1.4" fill="#fff"/>
+<path d="M-23 89Q-14 84 -5 89M5 89Q14 84 23 89" stroke="#2a1a10" stroke-width="3" fill="none" stroke-linecap="round"/></g>
+<path d="M-36 106Q0 104 36 106V128Q36 142 18 142H-18Q-36 142 -36 128Z" fill="#cdeeff" stroke="#8cc9ee" stroke-width="2"/><path d="M-34 114H34M-34 122H34M-32 130H32" stroke="#9fd6f2" stroke-width="2"/><path d="M-8 108Q0 111 8 108" stroke="#7bb9de" stroke-width="2" fill="none"/>
+<path d="M-40 82Q-40 48 0 48Q40 48 40 82Z" fill="#1f3a6e"/><path d="M-40 82Q-40 52 -8 49Q-34 56 -34 82Z" fill="#2c4f93"/><circle cx="0" cy="46" r="4" fill="#e4b84c"/><path d="M-40 82H40V88H-40Z" fill="#162b55"/>
+<path d="M-42 84Q0 96 42 84L47 89Q0 102 -47 89Z" fill="#162b55"/><path d="M-30 87Q0 96 30 87" stroke="#2c4f93" stroke-width="2" fill="none"/>
+<circle cx="0" cy="68" r="10" fill="#fff"/><rect x="-2" y="61" width="4" height="14" fill="#e5233b"/><rect x="-7" y="66" width="14" height="4" fill="#e5233b"/></g>
+</g><g fill="#fff" opacity=".9"><circle cx="150" cy="40" r="1.6"/><circle cx="230" cy="24" r="1.2"/><circle cx="420" cy="34" r="1.6"/><circle cx="560" cy="30" r="1.2"/><circle cx="90" cy="70" r="1.2"/></g></svg></div>
+<button class="m pri" id="cgo" disabled>▶ COMENZAR</button><div id="cst">Preparando el juego…</div></div>
+<div id="menu"><div class="p">
+<div id="home"><h1>🚑 AMBULANCIA 911</h1><p>Ciudad tropical · años 80 · mundo abierto</p>
+<button class="m pri" id="bPlay">Jugar</button><button class="m" id="bCtl">Controles</button><button class="m" id="bSet">Configuración</button><button class="m" id="bRst">Reiniciar</button><button class="m" id="bUsr">Iniciar sesión</button><button class="m" id="bOut">Cerrar sesión</button><button class="m" id="bAv">Mi avatar</button></div>
+<div id="ctl" hidden><h1>Controles</h1><ul><li><b>PC:</b> W/↑ acelerar · S/↓ frenar y reversa · A D / ←→ girar · Espacio freno de mano · E sirena · H bocina · C cámara · M misión · Esc pausa · Mouse: mueve el cursor para mirar alrededor (vista panorámica), arrastra para girar más, rueda para zoom</li><li><b>Celular:</b> inclina el teléfono como un volante, ACEL. y FRENO con el pulgar. ⟲ calibra el centro, 📱 activa o desactiva el giroscopio. Si no hay giroscopio aparecen ◀ ▶.</li><li><b>Misión (🎯 o M):</b> llega al círculo amarillo, recoge al paciente (frena dentro del círculo) y llévalo al hospital antes de que acabe el tiempo (40 s por tramo: si tardas la paciente se complica y bajan los puntos).</li><li><b>Hospital:</b> al entregar a la paciente entras a la sala y primero caminas hasta la paciente, escuchas el diálogo y respondes 6 preguntas del caso de cada paciente de obstetricia, según la semana y el día de gestación (contenido educativo simplificado). El traslado vale hasta 2 pts (menos si tardas) y las 6 preguntas hasta 3 pts (10 s cada una; error o tiempo agotado resta). Hay 300 niveles. En la sala muévete con WASD / flechas o la cruz táctil. Cada 50 puntos subes de nivel y tu hospital crece. Cada día llegan 2 o 3 pacientes y la semana tiene 7 días.</li></ul><button class="m" data-back>Volver</button></div>
+<div id="lg" hidden></div>
+<div id="set" hidden><h1>Configuración</h1>
+<label>Sensibilidad de giro <input id="sens" type="range" min="0.5" max="2" step="0.1" value="1" style="width:100%"></label>
+<label><input id="cGy" type="checkbox" checked> Control por giroscopio</label>
+<label><input id="cInv" type="checkbox"> Invertir giro (si va al revés)</label>
+<label><input id="cMu" type="checkbox"> Silenciar sonido</label>
+<button class="m" id="bCal2">Calibrar centro del teléfono</button><button class="m" data-back>Volver</button></div>
+</div></div>
+<script>
+(function(){const U='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',KY='three-r128',st=m=>{const e=document.getElementById('cst');if(e)e.textContent=m};
+const db=(m,v)=>new Promise((ok,no)=>{try{const q=indexedDB.open('amb911-offline',1);q.onupgradeneeded=()=>q.result.createObjectStore('s');q.onerror=()=>no();q.onsuccess=()=>{const s=q.result.transaction('s',m=='get'?'readonly':'readwrite').objectStore('s'),r=m=='get'?s.get(KY):s.put(v,KY);r.onsuccess=()=>ok(r.result);r.onerror=()=>no()}}catch(e){no()}});
+const exec=t=>{const s=document.createElement('script');s.textContent=t;document.head.appendChild(s)};
+const tag=u=>new Promise((ok,no)=>{const s=document.createElement('script');s.src=u;s.onload=ok;s.onerror=no;document.head.appendChild(s)});
+async function load(){let c=null,how='';try{c=await db('get')}catch(e){}
+ if(c){exec(c);how='cache'}
+ if(!window.THREE){try{await tag('three.min.js');how='local'}catch(e){}}
+ if(!window.THREE){try{const r=await fetch(U);if(!r.ok)throw 0;const t=await r.text();exec(t);how='net';try{await db('put',t)}catch(e){}}catch(e){}}
+ if(!window.THREE){st('⚠ Abre el juego una vez con internet para guardarlo; después funcionará sin conexión (o pon three.min.js junto a este archivo).');return}
+ try{const s=document.createElement('script');s.textContent=document.getElementById('gm').textContent;document.body.appendChild(s)}catch(e){st('Error: '+e.message);return}
+ st(how=='net'?'✓ Guardado: ya puedes jugar sin internet':'✓ Modo sin conexión listo');const b=document.getElementById('cgo');b.disabled=false;
+ b.onclick=()=>{document.getElementById('cover').classList.add('out');setTimeout(()=>document.getElementById('cover').hidden=true,700)}}
+addEventListener('DOMContentLoaded',load);if(document.readyState!='loading')load()})();
+</script>
+<script type="text/plain" id="gm">
+const $=i=>document.getElementById(i),R=Math.random,PI=Math.PI,cl=(v,a,b)=>Math.max(a,Math.min(b,v));
+const mobile=matchMedia('(pointer:coarse)').matches||'ontouchstart' in window;
+const cfg={sens:1,gyro:true,inv:false,mute:false},K={};
+const S=80,W=16;let state='menu',t=0,dayT=.25,sirenOn=false,cmode=0,shake=0,lastB=0;
+const rd=new THREE.WebGLRenderer({canvas:$('c'),antialias:!mobile});
+rd.setPixelRatio(Math.min(devicePixelRatio,mobile?1.5:2));
+const sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(65,1,.5,600);
+function rs(){rd.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()}
+addEventListener('resize',rs);rs();
+sc.fog=new THREE.Fog(0x87ceeb,70,320);
+const sun=new THREE.DirectionalLight(0xffffff,1);sun.position.set(100,200,60);sc.add(sun);
+const hemi=new THREE.HemisphereLight(0xd6f0ff,0xffd9e8,.8);sc.add(hemi);
+const M=c=>new THREE.MeshLambertMaterial({color:c}),B=c=>new THREE.MeshBasicMaterial({color:c});
+const box=(w,h,d,m,x=0,y=0,z=0,p=sc)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);p.add(o);return o};
+// ---- ciudad
+box(2000,.1,2000,M(0x7fae6b),0,-.05,0);box(50,.12,700,M(0xffe7b8),347,-.03,0);box(600,.14,1400,M(0x5fd6ee),672,-.02,0);
+const rm=M(0x4a4c50),lm=B(0xdcd9cc);
+for(let i=-4;i<=4;i++){box(W,.1,660,rm,i*S,0,0);box(660,.1,W,rm,0,0,i*S);box(.4,.12,660,lm,i*S,.01,0);box(660,.12,.4,lm,0,.01,i*S)}
+const AB=[],hosp=[],HB=[];let curT=-1;
+const FK=[['#bdb8ae','#4a5a68'],['#a46b52','#2f3b46'],['#d3c6a6','#55687a'],['#6f8fa5','#bfe0f0'],['#8a8f94','#37434d'],['#e2dfd8','#506274']],FT={};
+function fac(k,nx,ny){const key=k+'_'+nx+'_'+ny;if(FT[key])return FT[key];
+ if(!FT['b'+k]){const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');g.fillStyle=FK[k][0];g.fillRect(0,0,128,128);
+  for(let i=0;i<2;i++)for(let j=0;j<2;j++){g.fillStyle='#222';g.fillRect(i*64+13,j*64+11,38,42);g.fillStyle=R()<.25?'#ffe9a8':FK[k][1];g.fillRect(i*64+16,j*64+14,32,36);g.fillStyle='#ffffff55';g.fillRect(i*64+16,j*64+14,32,6)}
+  g.fillStyle='#00000018';g.fillRect(0,60,128,4);g.fillRect(0,124,128,4);
+  const tx=new THREE.CanvasTexture(c);tx.wrapS=tx.wrapT=THREE.RepeatWrapping;FT['b'+k]=tx}
+ const t=FT['b'+k].clone();t.needsUpdate=true;t.repeat.set(nx,ny);return FT[key]=t}
+const bmat=(w,h,d,k)=>{const ny=Math.max(1,Math.round(h/8)),a=new THREE.MeshLambertMaterial({map:fac(k,Math.max(1,Math.round(d/10)),ny)}),b=new THREE.MeshLambertMaterial({map:fac(k,Math.max(1,Math.round(w/10)),ny)}),r=M(0x55595e);return[a,a,r,r,b,b]};
+const HC=[[-1,-1],[1,0],[-3,2]],red=M(0xff4d6d),wh=M(0xffffff),swm=M(0xa7a7a2),neon=[B(0xff2d95),B(0x20e8ff),B(0xffe14d)];
+const trg=new THREE.CylinderGeometry(.25,.4,8,6),trm=M(0xd9a066),lg=new THREE.ConeGeometry(.9,5,4),lgm=M(0x3fe08a);
+function palm(x,z){const g=new THREE.Group(),h=7+R()*3,tr=new THREE.Mesh(trg,trm);tr.scale.y=h/8;tr.position.y=h/2;g.add(tr);
+ for(let i=0;i<6;i++){const l=new THREE.Mesh(lg,lgm),a=i*PI/3;l.position.set(Math.cos(a)*1.9,h-.3,Math.sin(a)*1.9);l.rotation.set(Math.sin(a)*1.25,0,-Math.cos(a)*1.25);g.add(l)}
+ g.position.set(x,0,z);sc.add(g)}
+for(let i=-4;i<4;i++)for(let j=-4;j<4;j++){
+ const cx=(i+.5)*S,cz=(j+.5)*S;box(64,.14,64,swm,cx,.03,cz);
+ if(HC.some(a=>a[0]==i&&a[1]==j)){
+  const hb=[cx-10,cx+10,cz-7,cz+7];AB.push(hb);HB.push({cx,cz,hb,g:null});
+  hosp.push({x:cx,z:(j+1)*S});continue}
+ if(R()<.13){box(60,.12,60,M(0x5f9a50),cx,.1,cz);
+  for(let k=0;k<6;k++)palm(cx+(R()-.5)*50,cz+(R()-.5)*50);continue}
+ for(const a of[-1,1])for(const b of[-1,1]){
+  const w=22+R()*4,d=22+R()*4,h=10+R()*(Math.abs(i)<2&&Math.abs(j)<2?55:25),x=cx+a*14.5,z=cz+b*14.5;
+  box(w,h,d,bmat(w,h,d,R()*6|0),x,h/2,z);box(w+.6,.5,d+.6,M(0x6f7378),x,h+.25,z);if(R()<.6)box(3,1.4,3,M(0x7a7f85),x+(R()-.5)*(w-6),h+1.2,z+(R()-.5)*(d-6));AB.push([x-w/2,x+w/2,z-d/2,z+d/2])}}
+const TN=['Centro de salud','Policlínico','Clínica materna','Hospital','Hospital regional','Hospital nacional','Hospital especializado','Hospital de referencia','Instituto materno','Instituto nacional','Complejo hospitalario','Ciudad médica'],HT=()=>Math.min(11,Math.floor(score/50)),glM=M(0x6b8fa8),cnM=M(0x9aa0a6);
+function buildHosp(n){const fl=n+1,w=Math.min(20+6*n,56),d=Math.min(14+4*n,38),h=fl*4.2+.6;
+ const c=document.createElement('canvas');c.width=256;c.height=64;const q=c.getContext('2d');q.fillStyle='#d62839';q.fillRect(0,0,256,64);q.fillStyle='#fff';q.font='bold 21px system-ui';q.textAlign='center';q.fillText(TN[n].toUpperCase(),128,40);
+ const sg=new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c)});
+ for(const o of HB){if(o.g)sc.remove(o.g);const g=o.g=new THREE.Group();sc.add(g);const b=(a1,a2,a3,m,x,y,z)=>box(a1,a2,a3,m,o.cx+x,y,o.cz+z,g);
+  o.hb[0]=o.cx-w/2;o.hb[1]=o.cx+w/2;o.hb[2]=o.cz-d/2;o.hb[3]=o.cz+d/2;
+  b(w,h,d,wh,0,h/2,0);b(w+1,.6,d+1,cnM,0,h+.3,0);
+  const nc=Math.floor((w-3)/4);for(let f=0;f<fl;f++)for(let k=0;k<nc;k++){const x=-(nc-1)*2+k*4;if(f==0&&Math.abs(x)<5)continue;b(2.2,1.6,.15,glM,x,2.6+f*4.2,d/2+.05)}
+  b(9,2.2,.25,sg,0,4.8,d/2+.2);b(8,.4,5,red,0,3.4,d/2+2.5);b(.4,3.4,.4,wh,-3.6,1.7,d/2+4.6);b(.4,3.4,.4,wh,3.6,1.7,d/2+4.6);b(4,3,.2,B(0x9fd8ff),0,1.6,d/2+.1);
+  b(1,4,.4,red,w/2-3,h+2.6,0);b(4,1,.4,red,w/2-3,h+2.6,0);
+  if(n>=2)for(const k of[-1,1])b(3,1.4,3,M(0x7a7f85),k*w/4,h+1.3,-d/4);
+  if(n>=3){b(10,.2,10,M(0x555a60),-w/4,h+.7,d/6);b(1,.05,4,wh,-w/4-1.8,h+.85,d/6);b(1,.05,4,wh,-w/4+1.8,h+.85,d/6);b(3.6,.05,1,wh,-w/4,h+.85,d/6)}
+  if(n>=4)b(10,10,10,glM,w/2-8,h+5,-d/4);
+  if(n>=5){b(.5,12,.5,wh,-w/2+4,h+6,0);b(3,.4,3,red,-w/2+4,h+12,0)}
+  if(n>=6)for(let k=-2;k<=2;k++)b(2.4,.15,1.6,B(0x2a4a8a),k*3,h+.9,d/4);
+  if(n>=7)b(8,h+6,8,glM,-w/2+6,(h+6)/2,-d/4);
+  if(n>=8)b(12,.3,6,red,0,3.9,d/2+3);
+  if(n>=9)b(10,3,10,glM,0,h+1.5,d/4);
+  if(n>=10)b(10,.2,10,M(0x555a60),w/4,h+.7,d/6);
+  if(n>=11)b(14,3,.4,B(0xffe14d),0,h+4.5,d/2)}}
+function chkTier(f){const n=HT();if(n==curT)return false;const up=curT>=0;curT=n;buildHosp(n);return up&&!f}
+buildHosp(0);curT=0;
+const lA=B(0x30e060),lB=B(0xff3030),pg=new THREE.BoxGeometry(.5,6,.5),hg=new THREE.BoxGeometry(1,1,1),pm=M(0x333333);
+for(let i=-4;i<=4;i++)for(let j=-4;j<=4;j++){const x=i*S+10,z=j*S+10;
+ const p=new THREE.Mesh(pg,pm);p.position.set(x,3,z);sc.add(p);if((i+j+8)%3==0)palm(x,z+30);
+ const h=new THREE.Mesh(hg,(i+j)&1?lA:lB);h.position.set(x,6.3,z);sc.add(h)}
+// ---- ambulancia
+const amb=new THREE.Group();sc.add(amb);const body=new THREE.Group();amb.add(body);
+box(2.6,2.4,4.6,wh,0,1.9,-.6,body);box(2.6,.8,1.6,M(0xeeeeee),0,1.1,2.5,body);box(2.5,.9,1.5,new THREE.MeshLambertMaterial({color:0x9fd8ff,transparent:true,opacity:.12}),0,1.95,2.5,body);box(2.6,.1,1.7,M(0xeeeeee),0,2.45,2.5,body);
+box(2.64,.5,4.7,red,0,1.5,-.6,body);box(1.4,.06,.4,red,0,3.13,-.6,body);box(.4,.06,1.4,red,0,3.13,-.6,body);
+const mR=B(0x550000),mBl=B(0x000055),mRon=B(0xff2030),mBon=B(0x2f8cff),lr=box(.7,.25,.4,mR,-.55,3.3,1.3,body),lbk=box(.7,.25,.4,mBl,.55,3.3,1.3,body);
+box(.4,.25,.05,B(0xfff2c0),.9,1.0,3.33,body);box(.4,.25,.05,B(0xfff2c0),-.9,1.0,3.33,body);
+const wg=new THREE.CylinderGeometry(.55,.55,.4,14);wg.rotateZ(PI/2);const wm=M(0x151515),WH=[],FP=[];
+for(const sx of[-1,1])for(const z of[2.3,-1.9]){const g=new THREE.Group();g.position.set(sx*1.3,.55,z);amb.add(g);
+ const w=new THREE.Mesh(wg,wm);g.add(w);WH.push(w);if(z>0)FP.push(g)}
+const pl=new THREE.PointLight(0xff0000,0,28);pl.position.set(0,4,1.3);amb.add(pl);
+const hl=new THREE.SpotLight(0xfff0d0,0,80,.55,.5);hl.position.set(0,1.5,3);amb.add(hl);const hlt=new THREE.Object3D();hlt.position.set(0,.5,30);amb.add(hlt);hl.target=hlt;
+// ---- tráfico y peatones
+const TR=[],PD=[],cm=[0xb3262c,0x24406b,0xd9d9d9,0x2b2b2b,0x6d7075,0xc2a13a,0x2f5d3a].map(M),cab=M(0x223344);
+for(let n=0;n<26;n++){const g=new THREE.Group();box(2.2,.9,4.4,cm[n%7],0,.8,0,g);box(1.9,.7,2.2,cab,0,1.5,-.2,g);for(const sx of[-1,1])for(const z of[1.4,-1.4])box(.3,.6,.7,wm,sx*1.1,.35,z,g);sc.add(g);
+ TR.push({g,ax:R()<.5,k:(R()*9|0)-4,dir:R()<.5?1:-1,u:(R()*2-1)*320,v:11+R()*8})}
+const bx=new THREE.BoxGeometry(1,1,1),skin=[0xf1c9a5,0xd9a066,0x8d5a3a,0x5c3a24],shirts=[0xff4fa3,0x19d3da,0xffe14d,0xffffff,0xff7a3c,0x7a5cff],pants=[0x2a3f7a,0xf0e6d0,0x222222,0xe85a7a];
+const OLM=new THREE.MeshBasicMaterial({color:0x111111,side:THREE.BackSide});function olo(m,pad=.03){const k=m.scale,c=new THREE.Mesh(bx,OLM);c.scale.set((k.x+pad)/k.x,(k.y+pad)/k.y,(k.z+pad)/k.z);m.add(c)}
+function limb(p,w,h,m,x,y){const o=new THREE.Group();o.position.set(x,y,0);const q=new THREE.Mesh(bx,m);q.scale.set(w,h,w);q.position.y=-h/2;olo(q);o.add(q);p.add(o);return o}
+function mkPerson(sh,pa,sk){const g=new THREE.Group(),ms_=M(sh??shirts[R()*6|0]),mp=M(pa??pants[R()*4|0]),ma=M(sk??skin[R()*4|0]);
+ const t=new THREE.Mesh(bx,ms_);t.scale.set(.5,.65,.28);t.position.y=1.15;olo(t);g.add(t);
+ const h=new THREE.Mesh(bx,ma);h.scale.set(.3,.3,.3);h.position.y=1.65;olo(h);g.add(h);
+ const hr=new THREE.Mesh(bx,M(R()<.5?0x2a1a10:0xe8c060));hr.scale.set(.32,.12,.32);hr.position.y=1.82;g.add(hr);
+ return{g,l:limb(g,.2,.8,mp,-.13,.8),r:limb(g,.2,.8,mp,.13,.8),al:limb(g,.14,.6,ma,-.34,1.45),ar:limb(g,.14,.6,ma,.34,1.45)}}
+const pat=mkPerson(0xff7ab8,0x4a90d9,0xd9a066);const pbl=new THREE.Mesh(bx,M(0xff7ab8));pbl.position.set(0,1.0,.12);pat.g.add(pbl);pat.g.visible=false;sc.add(pat.g);
+const OB=[];for(const hh of hosp)for(const dx of[-4,4]){const o=mkPerson(0xffffff,0x19b8c0);o.g.position.set(hh.x+dx,0,hh.z-14);sc.add(o.g);OB.push(o)}
+// ---- sala de hospital (interior) y rangos
+const RX=2000,RZ=2000,rr=new THREE.Mesh(new THREE.BoxGeometry(14,4,11),new THREE.MeshLambertMaterial({color:0xe9d9ee,side:THREE.BackSide}));rr.position.set(RX,2,RZ);sc.add(rr);
+box(14,.1,11,M(0x86b7c6),RX,.05,RZ);box(2.2,.5,3,M(0xcfd8dc),RX,.5,RZ+.2);box(2,.25,2.8,wh,RX,.85,RZ+.2);box(1.1,.2,.6,wh,RX,1.05,RZ-1);
+const rp=mkPerson(0xff7ab8,0x4a90d9,0xd9a066);const rbl=new THREE.Mesh(bx,M(0xff7ab8));rbl.position.set(0,1.0,.12);rp.g.add(rbl);rp.g.rotation.x=-PI/2;rp.g.position.set(RX,1.02,RZ+.9);sc.add(rp.g);
+box(.1,1.6,.1,pm,RX+2.4,.8,RZ-1);box(1,.65,.15,M(0x111111),RX+2.4,1.9,RZ-1);box(.8,.5,.02,B(0x0b3a22),RX+2.4,1.9,RZ-.91);box(.6,.04,.02,B(0x30ff80),RX+2.4,1.9,RZ-.89);
+box(.3,1.2,.06,red,RX,2.8,RZ-5.45);box(1.2,.3,.06,red,RX,2.8,RZ-5.45);box(1.4,2.4,.06,M(0xb0bec5),RX+5,1.2,RZ+5.45);
+const STF=[];for(const s of[-1,1]){const o=mkPerson(s<0?0xffffff:0x19b8c0,0x19b8c0);o.g.position.set(RX+s*1.9,0,RZ+.3);o.g.rotation.y=-s*PI/2;sc.add(o.g);STF.push({p:o,w:[[RX+s*2.4,RZ+.3],[RX+s*2.6,RZ-2.2],[RX+s*3.2,RZ+2.4],[RX+s*1.6,RZ+2.6]],i:s<0?0:2,pause:0})}
+const rl=new THREE.PointLight(0xfff2f8,.55,30);rl.position.set(RX,3.5,RZ);sc.add(rl);
+function roomCam(){cam.position.set(RX+5.2+Math.sin(t*.4)*.25,2.7,RZ+4.2);cam.lookAt(RX,1.1,RZ-.3)}
+const RANKS=[[0,'Nivel 1 · Obstetra'],[10,'Nivel 2 · Directora de Obstetricia'],[25,'Nivel 3 · Directora Médica'],[45,'Nivel 4 · Directora del Hospital'],[70,'Nivel 5 · Directora General de Salud']];
+const TH=[0,10,30,60,100],RNM={o:['Obstetra','Director de Obstetricia/Directora de Obstetricia','Director Médico/Directora Médica','Director del Hospital/Directora del Hospital','Director General de Salud/Directora General de Salud'],m:['Médico/Médica','Jefe de Emergencias/Jefa de Emergencias','Director Médico/Directora Médica','Director del Hospital/Directora del Hospital','Director General de Salud/Directora General de Salud'],t:['Técnico/Técnica','Jefe de Técnicos/Jefa de Técnicos','Coordinador de Emergencias/Coordinadora de Emergencias','Director del Hospital/Directora del Hospital','Director General de Salud/Directora General de Salud']};
+const TI=[[1,'Obstetra en prácticas'],[10,'Obstetra'],[25,'Obstetra Senior'],[50,'Jefe de Guardia/Jefa de Guardia'],[75,'Jefe de Servicio/Jefa de Servicio'],[100,'Director de Obstetricia/Directora de Obstetricia'],[150,'Director Médico/Directora Médica'],[200,'Director del Hospital/Directora del Hospital'],[250,'Director Regional de Salud/Directora Regional de Salud'],[300,'Ministro de Salud/Ministra de Salud']];
+const rank=()=>{const lv=Math.min(300,1+Math.floor(score/50));let s=TI[0][1];for(const a of TI)if(lv>=a[0])s=a[1];const p=s.split('/');return[lv,'Nivel '+lv+' · '+(p[user.g=='m'?0:1]||p[0])]};
+const QZ=[['Al recibir a la paciente, ¿qué haces primero?',['Revisar signos vitales de la madre y la frecuencia cardiaca del bebé','Esperar sin evaluarla','Enviarla a casa'],0,'Primero se evalúa a la madre (presión, pulso) y al bebé (frecuencia cardiaca fetal).'],
+['Tiene presión de 160/110, dolor de cabeza fuerte y visión borrosa.',['Darle un analgésico y esperar','Sospechar preeclampsia grave y avisar al equipo de inmediato','Pedirle que camine'],1,'Son señales de alarma de preeclampsia grave: requiere atención urgente según protocolo.'],
+['Dilatación completa (10 cm) y contracciones cada 2 minutos.',['Pasar a sala de partos y preparar el nacimiento','Mandarla a la sala de espera','Darle el alta'],0,'Con dilatación completa se prepara el periodo expulsivo.'],
+['Después del nacimiento, ¿qué es lo adecuado?',['Separar al bebé de inmediato','Contacto piel con piel y vigilar el sangrado de la madre','Dejar de vigilar a la madre'],1,'El contacto piel con piel favorece al bebé; hay que vigilar la hemorragia posparto.']];
+let qi=0,qp=0,gain=0;
+const POOL={o:[
+{t:'Embarazo temprano',w:6,alert:'Alerta: embarazo temprano (sem. 6) con dolor abdominal fuerte y sangrado',q:[
+['Dolor abdominal bajo de un lado, sangrado leve y mareo en embarazo temprano. ¿Qué sospechas?',['Indigestión común','Embarazo ectópico: evaluación urgente','Cólico menstrual normal'],1,'Dolor pélvico con sangrado en el primer trimestre obliga a descartar un embarazo ectópico.'],
+['¿Qué estudios pides?',['Radiografía de abdomen','Ecografía transvaginal y hCG cuantitativa','Solo reposo en casa'],1,'La ecografía transvaginal junto con la hCG ayudan a localizar el embarazo.'],
+['Está pálida, con presión baja y pulso rápido. ¿Qué haces?',['Vía venosa, avisar a cirugía y preparar manejo de urgencia','Darle el alta con control en una semana','Esperar 48 horas'],0,'Con inestabilidad se sospecha ruptura: estabilizar y preparar cirugía de urgencia.'],
+['Su grupo sanguíneo es Rh negativo. ¿Qué se considera?',['Nada, no importa','Inmunoglobulina anti-D según protocolo','Transfundirla siempre'],1,'En sangrado del embarazo con madre Rh negativo se considera anti-D según protocolo.']]},
+{t:'Náuseas intensas',w:12,alert:'Alerta: 12 semanas de embarazo con vómitos continuos y deshidratación',q:[
+['Vomita más de 10 veces al día y no tolera líquidos. ¿Qué sospechas?',['Hiperémesis gravídica','Un simple resfriado','Preeclampsia'],0,'Vómitos incoercibles con deshidratación sugieren hiperémesis gravídica.'],
+['¿Qué evalúas primero?',['Solo su estado de ánimo','Hidratación, peso, electrolitos y cetonas en orina','Nada, es normal'],1,'Se valora la deshidratación y las alteraciones de electrolitos.'],
+['¿Cuál es el manejo inicial?',['Ayuno completo','Líquidos por vía venosa y antieméticos seguros según protocolo','Darla de alta sin tratamiento'],1,'Se rehidrata, se corrigen electrolitos y se usan antieméticos indicados en el embarazo.'],
+['¿Qué consejo ayuda después en casa?',['Comidas pequeñas y frecuentes','Pasar muchas horas sin comer','Evitar los líquidos'],0,'Comer poco y seguido y mantener los líquidos reduce las náuseas.']]},
+{t:'Preeclampsia',w:28,alert:'Alerta: 28 semanas de embarazo con dolor de cabeza intenso y visión borrosa',q:[
+['Presión 160/110, dolor de cabeza y visión borrosa. ¿Qué sospechas?',['Cansancio normal','Preeclampsia grave','Gripe'],1,'Son señales de alarma de preeclampsia grave.'],
+['¿Qué medicamento previene las convulsiones?',['Sulfato de magnesio según protocolo','Solo paracetamol','Un laxante'],0,'El sulfato de magnesio previene la eclampsia (convulsiones).'],
+['¿Qué se vigila de cerca?',['Presión arterial, reflejos, orina y estado del bebé','Solo la temperatura','Nada hasta mañana'],0,'Se controla a la madre y al bebé de forma continua.'],
+['El tratamiento definitivo de la preeclampsia grave es...',['Esperar sin límite','Planificar el nacimiento en el momento y lugar adecuados','Enviarla a casa'],1,'El nacimiento es el tratamiento definitivo; se decide según la gravedad y la edad gestacional.']]},
+{t:'Sangrado tardío',w:32,alert:'Alerta: 32 semanas de embarazo con sangrado rojo vivo sin dolor',q:[
+['Sangrado rojo vivo, sin dolor, en el último trimestre. ¿Qué sospechas?',['Placenta previa','Estreñimiento','Gastritis'],0,'El sangrado indoloro del tercer trimestre sugiere placenta previa.'],
+['Antes de la ecografía, ¿qué NO debes hacer?',['Tomar signos vitales','Tacto vaginal','Monitorear al bebé'],1,'No se hace tacto vaginal hasta descartar placenta previa: podría aumentar el sangrado.'],
+['¿Qué estudio confirma el diagnóstico?',['Radiografía de tórax','Ecografía obstétrica','Ninguno'],1,'La ecografía localiza la placenta.'],
+['Si el sangrado es abundante y la madre está inestable...',['Mandarla a caminar','Estabilizar y preparar cesárea de urgencia','Esperar en casa'],1,'La inestabilidad exige estabilizar y finalizar el embarazo por cesárea.']]},
+{t:'Trabajo de parto',w:39,alert:'Alerta: 39 semanas de embarazo con contracciones regulares',q:QZ},
+{t:'Hemorragia posparto',w:40,alert:'Alerta: recién parida con sangrado abundante',q:[
+['¿Causa más frecuente del sangrado posparto?',['Atonía uterina (útero que no se contrae)','Fiebre','Dolor de cabeza'],0,'La atonía uterina es la causa más común.'],
+['¿Primera medida?',['Esperar a que pare','Masaje uterino y uterotónicos (oxitocina) según protocolo','Darle agua'],1,'Se masajea el útero y se administran uterotónicos.'],
+['Además...',['Vía venosa, reponer líquidos y vigilar signos vitales','Enviarla a caminar','Retirar el monitor'],0,'Se estabiliza con líquidos y monitoreo continuo.']]},
+{t:'Diabetes gestacional',w:26,alert:'Alerta: 26 semanas con mucha sed, orina frecuente y glucosa alta',q:[
+['Mucha sed y glucosa elevada en el embarazo. ¿Qué sospechas?',['Diabetes gestacional','Anemia por frío','Nada importante'],0,'La glucosa alta durante el embarazo sugiere diabetes gestacional.'],
+['Primeras medidas',['Ayuno prolongado','Alimentación adecuada, control de glucosa y seguimiento médico','Comer más azúcar'],1,'Dieta, control de glucosa y seguimiento son la base.'],
+['Si la dieta no basta...',['Ignorarlo','Valorar insulina según indicación médica','Suspender los controles'],1,'El médico puede indicar insulina si no se logra el control.']]}],
+};
+let cur=null;const cs=()=>cur||POOL.o[0];
+const user={g:'f',r:'o'},DAYLEN=360;let Q=[],plan=[],bag=[],av=null;
+const sh=a=>{for(let i=a.length-1;i>0;i--){const j=R()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+function nextCase(){if(!bag.length)bag=sh(POOL[user.r].slice());return bag.pop()}
+function buildPlan(){plan=[];const ex=new Set(sh([0,1,2,3,4,5,6]).slice(0,R()*7|0)),Wn=[[6.5,11],[12,17],[18,23.5]];
+ for(let d=0;d<7;d++){const ws=sh([0,1,2]).slice(0,ex.has(d)?3:2);plan.push(ws.map(i=>mkPat(nextCase(),Wn[i][0]+R()*(Wn[i][1]-Wn[i][0]))).sort((a,b)=>a.at-b.at))}}
+function buildAv(){if(av)sc.remove(av.g);const f=user.g=='f';av=mkPerson({o:0x19d3a8,m:0xffffff,t:0x6aa8ff}[user.r],0x3a6ea5,f?0xf1c9a5:0xd9a066);
+ const hr=new THREE.Mesh(bx,M(f?0x5a2a1a:0x2a1a10));if(f){hr.scale.set(.36,.55,.14);hr.position.set(0,1.5,-.17)}else{hr.scale.set(.34,.1,.34);hr.position.set(0,1.84,0)}
+ av.g.add(hr);av.g.position.set(RX,0,RZ+2.3);av.g.rotation.y=PI;sc.add(av.g)}
+function newGame(){reset();bag=[];score=0;done=0;missed=0;day=1;dayT=.25;cur=null;buildPlan();Q=plan[0].slice();buildAv();$('bPlay').textContent='Jugar'}
+function nextDay(){missed+=Q.length;Q=[];day++;if(day>7){weekEnd();return}Q=plan[day-1].slice();say('☀️ Día '+day+' · '+Q.length+' pacientes previstos')}
+function weekEnd(){ms=0;mk.visible=false;pat.g.visible=false;state='room';hudv('hidden');$('rm').hidden=false;$('rt').textContent='📅 Semana completada';
+ $('rq').textContent='Atendidos '+done+' de '+(done+missed)+' pacientes · '+score+' pts';$('rf').textContent=rank()[1];nextBtn('Nueva semana',()=>{$('rm').hidden=true;hudv('');newGame();state='play'})}
+function clockTick(dt){const o=dayT;dayT+=dt*(Q.length||ms?1:4)/DAYLEN;if(dayT>=1)dayT-=1;if(o<.25&&dayT>=.25)nextDay();
+ if(state=='play'&&!ms&&Q.length&&(dayT*24>=Q[0].at||dayT<.25))startMission(Q.shift())}
+function drawClk(){const g=$('ck').getContext('2d'),h=dayT*24,a=(h%12)/12*2*PI,m=(h%1)*2*PI;g.clearRect(0,0,64,64);
+ g.fillStyle=h>6&&h<19?'#fff6c8':'#d8d4ff';g.beginPath();g.arc(32,32,30,0,2*PI);g.fill();g.strokeStyle='#ff8fc7';g.lineWidth=3;g.stroke();
+ g.strokeStyle='#5b5f8a';g.lineWidth=1.5;for(let i=0;i<12;i++){const q=i*PI/6;g.beginPath();g.moveTo(32+Math.sin(q)*25,32-Math.cos(q)*25);g.lineTo(32+Math.sin(q)*28,32-Math.cos(q)*28);g.stroke()}
+ g.lineCap='round';g.lineWidth=3;g.beginPath();g.moveTo(32,32);g.lineTo(32+Math.sin(a)*15,32-Math.cos(a)*15);g.stroke();g.lineWidth=2;g.beginPath();g.moveTo(32,32);g.lineTo(32+Math.sin(m)*23,32-Math.cos(m)*23);g.stroke();
+ $('ct').textContent='Día '+day+'/7 · '+String(Math.floor(h)).padStart(2,'0')+':'+String(Math.floor(h%1*60)).padStart(2,'0')+(!Q.length&&!ms?' ⏩':'')}
+const bellies=w=>{const s=!w?0:(cs().t=='Hemorragia posparto'||META[cs().t].pp)?.3:cl((w-8)/32,.02,1),k=cs().k||1;for(const b of[pbl,rbl])b.scale.set(w?.5:0,.4*s,.42*s+.02);pat.g.scale.setScalar(k);rp.g.scale.setScalar(k)};
+const hudv=v=>['mm','mis','spd','tb','mob','clk','nt'].forEach(i=>$(i).style.visibility=v);
+function enterRoom(g){done++;bellies(cs().w+(cs().d||0)/7);gain=g;qi=0;qp=0;state='room';K.gas=K.brk=K.lft=K.rgt=0;hudv('hidden');$('rm').hidden=false;quiz()}
+function quiz(){const q=cs().q[qi],o=$('ro');$('rt').textContent='🏥 Día '+day+' · '+cs().t+' · pregunta '+(qi+1)+'/'+cs().q.length;$('rq').textContent=q[0];$('rf').textContent='';o.innerHTML='';
+ q[1].forEach((s,i)=>{const b=document.createElement('button');b.className='m';b.textContent=s;b.onclick=()=>ans(i);o.appendChild(b)})}
+function nextBtn(txt,f){const o=$('ro');o.innerHTML='';const b=document.createElement('button');b.className='m pri';b.textContent=txt;b.onclick=f;o.appendChild(b)}
+function ans(i){const q=cs().q[qi],ok=i==q[2];if(ok)qp++;$('rf').textContent=(ok?'✅ Correcto. ':'❌ Mejor opción: «'+q[1][q[2]]+'». ')+q[3];const n=cs().q.length;nextBtn(qi<n-1?'Siguiente':'Finalizar',()=>{qi++;qi<n?quiz():endRoom()})}
+function endRoom(){score+=qp;const r1=rank()[1];$('rt').textContent='🍼 Paciente atendido · '+done+' esta semana';$('rq').textContent='Misión +'+gain+' pts · Sala +'+qp+' pts = '+(gain+qp)+'/10';
+ $('rf').textContent=r1!=rk0?'🎓 ¡Ascenso! '+r1:r1+' · '+score+' pts';
+ nextBtn('Volver a la ciudad',()=>{$('rm').hidden=true;hudv('');state='play';ch=P.h;cam.position.set(P.x-Math.sin(P.h)*13,6,P.z-Math.cos(P.h)*13)})}
+for(let n=0;n<34;n++){const pp=mkPerson(),g=pp.g;sc.add(g);
+ PD.push({g,pp,fl:0,ax:R()<.5,k:(R()*9|0)-4,side:R()<.5?-1:1,u:(R()*2-1)*300,dir:R()<.5?1:-1,v:1.2+R()})}
+// ---- estado
+let P,ms=0,tgt=null,tl=0,score=0,coll=0,ch=0,mc=0,rk0='',day=1,missed=0,done=0,cx=0,tlT=1;
+const mk=new THREE.Mesh(new THREE.CylinderGeometry(7,7,40,16,1,true),new THREE.MeshBasicMaterial({color:0xffd23f,transparent:true,opacity:.35,side:2}));mk.visible=false;mk.position.y=20;sc.add(mk);
+function reset(){P={x:0,z:40,h:0,v:0,steer:0,acc:0};ch=0;ms=0;tgt=null;score=0;coll=0;mk.visible=false;pat.g.visible=false;dayT=.25;sirenOn=false;day=1;$('mis').textContent='Conducción libre'}reset();
+function say(s){const e=$('toast');e.textContent=s;e.style.opacity=1;clearTimeout(say.t);say.t=setTimeout(()=>e.style.opacity=0,3200)}
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
+function nearHosp(p){return hosp.reduce((a,b)=>dist(p,b)<dist(p,a)?b:a)}
+function startMission(p){if(ms||state=='room')return;p=p||Q.shift();if(!p){say('Sin pacientes por ahora. Espera la siguiente alerta');return}cur=Object.assign({},p.c,{w:p.wk,d:p.dy});let q,n_=0;const rg_=[[100,190],[190,290],[290,440]][R()*3|0];do{q={x:((R()*7|0)-3)*S,z:((R()*8|0)-4+.5)*S}}while(++n_<400&&(dist(q,P)<rg_[0]||dist(q,P)>rg_[1]));
+ tgt={x:q.x,z:q.z,r:9};ms=1;mc=0;bellies(cs().w+(cs().d||0)/7);pat.g.visible=true;pat.g.position.set(q.x+3,0,q.z+2);tlT=tl=dist(q,P)>300?50:40;cx=0;mk.visible=true;mk.position.x=tgt.x;mk.position.z=tgt.z;ntInit()}
+function missionUpd(dt){if(!ms){$('nt').hidden=true;return}tl-=dt;ntUpd(dt);const rt=tl/tlT;let k=rt<.15?2:rt<.4?1:0;if(mc>=5)k=2;else if(mc>=2)k=Math.max(k,1);if(k>cx){cx=k;if(k==2)dT=5;say(k==1?'⚠ La paciente empeora: más dolor y mareo'+(mc>=2?' (golpes y manejo brusco)':''):'🩸 ¡Se complicó! Tienes 5 s antes de perderla')}
+ if(cx==2){dT-=dt;if(dT<=0){missed++;ms=0;mk.visible=false;pat.g.visible=false;score=Math.max(0,score-1);saveU();say('💔 La paciente falleció por la demora · −1 pt');return}}
+ if(tl<=0){missed++;ms=0;mk.visible=false;pat.g.visible=false;say('⏱ Tiempo agotado');return}
+ if(dist(P,tgt)<tgt.r&&Math.abs(P.v)<9){
+  if(ms==1){pat.g.visible=false;const h=nearHosp(P);tgt={x:h.x,z:h.z,r:10};ms=2;tl=40;tlT=40;mk.position.x=tgt.x;mk.position.z=tgt.z;say('🧑‍⚕️ Paciente a bordo: ve al hospital, el equipo te espera')}
+  else{const pts=[2,1.5,1][cx];rk0=rank()[1];ms=0;mk.visible=false;enterRoom(pts);say('✅ El equipo recibe al paciente: +'+pts+' pts')}}}
+// ---- audio
+let AC,eo,eg,so,sg,ho,hz;
+function initAudio(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)();
+ const mo=(ty,fr)=>{const o=AC.createOscillator(),g=AC.createGain();o.type=ty;o.frequency.value=fr;g.gain.value=0;o.connect(g);g.connect(AC.destination);o.start();return[o,g]};
+ [eo,eg]=mo('sawtooth',50);[so,sg]=mo('triangle',800);[ho,hz]=mo('square',420)}catch(e){AC=null}}
+function audio(thr){if(!AC)return;const on=state=='play'&&!cfg.mute;
+ eo.frequency.value=40+Math.abs(P.v)*3+thr*14;eg.gain.setTargetAtTime(on&&Math.abs(P.v)>1.5?.012+Math.abs(P.v)*.0004:0,AC.currentTime,.15);
+ so.frequency.value=850+Math.sin(t*5)*350;sg.gain.value=on&&sirenOn?.05:0;hz.gain.value=on&&K.horn?.05:0}
+// ---- entrada
+let tilt=0,cal=0,hasG=false,gyOn=false;
+function onO(e){if(e.beta==null)return;hasG=true;const a=(screen.orientation&&screen.orientation.angle)||window.orientation||0;
+ tilt=a==90?e.beta:(a==270||a==-90)?-e.beta:-e.gamma}
+async function enableGyro(){if(!mobile||gyOn)return;try{
+ if(window.DeviceOrientationEvent&&DeviceOrientationEvent.requestPermission&&await DeviceOrientationEvent.requestPermission()!=='granted'){cfg.gyro=false;sync();say('Permiso denegado: usa los botones ◀ ▶');return}
+ gyOn=true;addEventListener('deviceorientation',onO);
+ setTimeout(()=>{if(hasG){cal=tilt;say('Giroscopio listo · inclina para girar')}else{cfg.gyro=false;sync();say('Giroscopio no disponible: usa ◀ ▶')}},1500)}catch(e){cfg.gyro=false;sync()}}
+function sync(){$('cGy').checked=cfg.gyro;$('bGy').classList.toggle('on',cfg.gyro&&mobile);$('lft').hidden=$('rgt').hidden=cfg.gyro&&hasG}
+function inputs(){const th=K.ArrowUp||K.KeyW||K.gas?1:0,br=K.ArrowDown||K.KeyS||K.brk?1:0;let st=0;
+ if(K.ArrowLeft||K.KeyA||K.lft)st++;if(K.ArrowRight||K.KeyD||K.rgt)st--;
+ if(cfg.gyro&&hasG){let d=(tilt-cal)*(cfg.inv?-1:1);d=Math.abs(d)<3?0:d-Math.sign(d)*3;st+=cl(d/(22/cfg.sens),-1,1)}
+ return{th,br,st:cl(st,-1,1)}}
+addEventListener('keydown',e=>{if(e.repeat)return;K[e.code]=1;if(/Arrow|Space/.test(e.code))e.preventDefault();
+ if(e.code=='KeyE')toggleSiren();if(e.code=='KeyC')camNext();if(e.code=='Escape')pause();if(e.code=='KeyM')startMission();if(e.code=='KeyH')K.horn=1});
+addEventListener('keyup',e=>{K[e.code]=0;if(e.code=='KeyH')K.horn=0});
+function hold(id,key){const el=$(id);el.addEventListener('pointerdown',e=>{K[key]=1;el.classList.add('on');e.preventDefault();initAudio()});
+ ['pointerup','pointercancel','pointerleave'].forEach(v=>el.addEventListener(v,()=>{K[key]=0;el.classList.remove('on')}))}
+hold('dU','dU');hold('dD','dD');hold('dL','dL');hold('dR','dR');hold('gas','gas');hold('brk','brk');hold('lft','lft');hold('rgt','rgt');hold('hrn','horn');
+function toggleSiren(){sirenOn=!sirenOn;$('bSir').classList.toggle('on',sirenOn)}
+function camNext(){cmode=(cmode+1)%4;$('sw').style.display=cmode==3?'block':'none';amb.visible=cmode!=3}
+function pause(){if(state=='room')return;if(state=='play'){state='menu';$('menu').hidden=false;show('home');$('bPlay').textContent='Continuar'}else if(started)play()}
+const tap=(id,f)=>$(id).addEventListener('click',f);
+tap('bSir',toggleSiren);tap('bCam',camNext);tap('bMis',()=>startMission());tap('bPau',pause);
+tap('bCal',()=>{cal=tilt;say('Centro calibrado')});tap('bCal2',()=>{cal=tilt;say('Centro calibrado')});
+tap('bGy',()=>{cfg.gyro=!cfg.gyro;if(cfg.gyro)enableGyro();sync()});
+$('sens').oninput=e=>cfg.sens=+e.target.value;$('cGy').onchange=e=>{cfg.gyro=e.target.checked;if(cfg.gyro)enableGyro();sync()};
+$('cInv').onchange=e=>cfg.inv=e.target.checked;$('cMu').onchange=e=>cfg.mute=e.target.checked;
+function show(id){['home','ctl','set','lg'].forEach(x=>$(x).hidden=x!=id)}
+tap('bCtl',()=>show('ctl'));tap('bSet',()=>show('set'));document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>show('home'));
+let started=false;
+function play(){started=true;initAudio();if(AC&&AC.state=='suspended')AC.resume();enableGyro();state='play';$('menu').hidden=true;sync()}
+tap('bPlay',()=>started?play():prof?(newGame(),play()):(show('lg'),renderLg()));tap('bRst',()=>{if(prof){started=false;newGame();play()}else{show('lg');renderLg()}});tap('bUsr',()=>{show('lg');renderLg()});tap('bOut',()=>{saveU();prof=null;DB.last=null;saveDB();started=false;state='menu';show('lg');renderLg()});tap('bAv',()=>{if(prof)openEd(0);else{show('lg');renderLg()}});
+function selUI(){document.querySelectorAll('[data-g],[data-r]').forEach(b=>b.classList.toggle('pri',b.dataset.g==user.g||b.dataset.r==user.r))}
+document.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{user.g=b.dataset.g;selUI()});
+document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{user.r=b.dataset.r;selUI()});
+
+if(mobile){$('mob').style.display='block'}else{$('bGy').hidden=$('bCal').hidden=true}
+// ---- física
+function bump(){if(t-lastB>.6){lastB=t;coll++;mc++;shake=.5;if(navigator.vibrate)navigator.vibrate(60)}}
+function phys(dt){const{th,br,st}=inputs();let a=0;
+ if(th)a+=P.v<0?40:22*(1-P.v/44);
+ if(br)a+=P.v>.3?-48:P.v>-12?-16:0;
+ if(K.Space)a-=Math.sign(P.v)*35*Math.min(1,Math.abs(P.v));
+ a-=P.v*.35;if(!th&&!br)a-=Math.sign(P.v)*3;
+ const pv=P.v;P.v+=a*dt;if(!th&&!br&&pv*P.v<0)P.v=0;
+ P.acc+=(a-P.acc)*Math.min(1,dt*6);P.steer+=(st-P.steer)*Math.min(1,dt*8);
+ const hs=Math.min(1,Math.abs(P.v)/7)*Math.sign(P.v);
+ P.h+=P.steer*1.7*hs*dt/(1+Math.abs(P.v)/35)*(K.Space?1.6:1);
+ P.x+=Math.sin(P.h)*P.v*dt;P.z+=Math.cos(P.h)*P.v*dt;
+ if(Math.abs(P.x)>330){P.x=cl(P.x,-330,330);P.v*=.5}if(Math.abs(P.z)>330){P.z=cl(P.z,-330,330);P.v*=.5}
+ for(const b of AB){const qx=cl(P.x,b[0],b[1]),qz=cl(P.z,b[2],b[3]);let dx=P.x-qx,dz=P.z-qz,d=Math.hypot(dx,dz);
+  if(d<2.5){if(d<.01){dx=1;dz=0;d=1}P.x+=dx/d*(2.5-d);P.z+=dz/d*(2.5-d);if(Math.abs(P.v)>6)bump();P.v*=.4}}
+ for(const c of TR){const d=Math.hypot(P.x-c.g.position.x,P.z-c.g.position.z);
+  if(d<3.8){const k=(3.8-d)/d;P.x+=(P.x-c.g.position.x)*k;P.z+=(P.z-c.g.position.z)*k;if(Math.abs(P.v)>3)bump();P.v*=.6}}
+ return th}
+function world(dt){
+ for(const c of TR){c.u+=c.dir*c.v*dt;if(Math.abs(c.u)>330)c.u=-c.dir*330;
+  if(c.ax){c.g.position.set(c.u,0,c.k*S+4*c.dir);c.g.rotation.y=c.dir>0?PI/2:-PI/2}else{c.g.position.set(c.k*S-4*c.dir,0,c.u);c.g.rotation.y=c.dir>0?0:PI}}
+ for(const p of PD){const dd=dist(P,p.g.position);if(dd<(sirenOn?20:13)&&Math.abs(P.v)>4){p.dir=(p.ax?Math.sign(p.g.position.x-P.x):Math.sign(p.g.position.z-P.z))||1;p.fl=1.5}p.fl-=dt;p.u+=p.dir*p.v*(p.fl>0?3.2:1)*dt;if(Math.abs(p.u)>300)p.dir*=-1;const w=Math.sin(t*p.v*(p.fl>0?9:5)+p.k)*.7,q=p.pp;q.l.rotation.x=w;q.r.rotation.x=-w;q.al.rotation.x=-w;q.ar.rotation.x=w;const o=p.side*(W/2+1.2);
+  if(p.ax)p.g.position.set(p.u,0,p.k*S+o);else p.g.position.set(p.k*S+o,0,p.u);
+  p.g.rotation.y=p.ax?(p.dir>0?PI/2:-PI/2):(p.dir>0?0:PI)}
+ const ph=(t%16)<8;lA.color.setHex(ph?0x30e060:0xff3030);lB.color.setHex(ph?0xff3030:0x30e060)}
+function sky(){const h=-Math.cos(dayT*2*PI),d=cl((h+.2)/.5,0,1),dusk=Math.max(0,1-Math.abs(h)/.45);
+ const c=new THREE.Color(0x3a3f85).lerp(new THREE.Color(0x8fdcff),d).lerp(new THREE.Color(0xffa6d5),dusk*.7);
+ sc.background=c;sc.fog.color.copy(c);sun.intensity=.25+d*.85;hemi.intensity=.55+d*.4;
+ sun.position.set(Math.sin(dayT*2*PI)*200,Math.max(20,h*250),60);hl.intensity=(1-d)*1.6}
+let oy=0,op=0,idle=0,zm=1,drag=false,lx=0,ly=0,hov=false;
+const CM=[[13,6,7],[8,3.2,6],[12,48,3],[-.3,2.7,12]],ad=(a,b)=>((b-a+PI)%(2*PI)+2*PI)%(2*PI)-PI;
+function camUpd(dt){const m=CM[cmode];ch+=ad(ch,P.h)*Math.min(1,dt*(cmode==3?20:4));
+ if(!drag&&!hov){idle+=dt;if(idle>2.5){const k=Math.min(1,dt*2.5);oy-=oy*k;op-=op*k}}const ya=ch+oy,sx=Math.sin(ya),sz=Math.cos(ya),q=cmode==3?1:Math.min(1,dt*7),zz=cmode==3?1:zm;
+ cam.position.x+=(P.x-sx*m[0]*zz-cam.position.x)*q;cam.position.y+=(m[1]*zz+op-cam.position.y)*q;cam.position.z+=(P.z-sz*m[0]*zz-cam.position.z)*q;
+ if(shake>0){shake-=dt;cam.position.x+=(R()-.5)*shake;cam.position.y+=(R()-.5)*shake}
+ cam.lookAt(P.x+sx*m[2],1.6,P.z+sz*m[2])}
+// ---- minimapa
+const mx=$('mm').getContext('2d');
+function minimap(){const g=mx,s=.3,c=Math.cos(P.h),n=Math.sin(P.h),A=-c*s,Bb=-n*s,C=n*s,D=-c*s;
+ g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,120,120);g.save();g.beginPath();g.arc(60,60,60,0,2*PI);g.clip();
+ g.setTransform(A,Bb,C,D,60-(A*P.x+C*P.z),60-(Bb*P.x+D*P.z));
+ g.strokeStyle='#5b6472';g.lineWidth=W;for(let i=-4;i<=4;i++){g.beginPath();g.moveTo(i*S,-330);g.lineTo(i*S,330);g.moveTo(-330,i*S);g.lineTo(330,i*S);g.stroke()}
+ g.fillStyle='#ff3b4e';for(const h of hosp)g.fillRect(h.x-12,h.z-24,24,24);
+ if(tgt){g.strokeStyle='#ffd23f';g.lineWidth=5;g.setLineDash([14,10]);g.beginPath();g.moveTo(P.x,P.z);g.lineTo(tgt.x,tgt.z);g.stroke();g.setLineDash([]);
+  }
+ g.restore();g.setTransform(1,0,0,1,0,0);
+ if(tgt){const X=(x,y,s)=>{g.beginPath();g.moveTo(x-s,y-s);g.lineTo(x+s,y+s);g.moveTo(x+s,y-s);g.lineTo(x-s,y+s);g.stroke()};
+  let tx=A*(tgt.x-P.x)+C*(tgt.z-P.z),ty=Bb*(tgt.x-P.x)+D*(tgt.z-P.z);const r=Math.hypot(tx,ty);if(r>48){tx*=48/r;ty*=48/r}tx+=60;ty+=60;g.lineCap='round';
+  if(ms==1){g.strokeStyle='#fff';g.lineWidth=8;X(tx,ty,7);g.strokeStyle='#ff1e3c';g.lineWidth=4.5;X(tx,ty,7)}
+  else{g.fillStyle='#fff';g.beginPath();g.arc(tx,ty,10,0,2*PI);g.fill();g.fillStyle='#ff1e3c';g.fillRect(tx-6,ty-2,12,4);g.fillRect(tx-2,ty-6,4,12)}}
+ g.fillStyle='#2f8cff';g.beginPath();g.moveTo(60,50);g.lineTo(66,68);g.lineTo(54,68);g.fill()}
+// ---- bucle
+let last=performance.now(),hudT=0;
+function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/1000);last=now;t+=dt;let th=0;
+ if(state=='play'){th=phys(dt);world(dt);missionUpd(dt);clockTick(dt);
+  hudT+=dt;if(hudT>.1){hudT=0;drawClk();$('kmh').textContent=Math.round(Math.abs(P.v)*3.6);$('sc').textContent=rank()[1]+' · '+score+' pts · 🏥 '+TN[HT()];
+   $('mis').textContent=ms?(ms==1?'🚑 Día '+day+'/7 · recoger paciente: '+cs().t+'':'🏥 Hospital (obstetras)')+' · '+Math.round(dist(P,tgt))+' m · ⏱ '+Math.ceil(tl)+' s · '+['estable','⚠ complicada','🩸 hemorragia'][cx]:'Pendientes hoy: '+Q.length+' · 🎯 para misión'}
+  minimap()}
+ amb.position.set(P.x,0,P.z);amb.rotation.y=P.h;if(drv){drv.wh.rotation.z=-P.steer*2.2;drv.g.rotation.y=P.steer*.12}
+ body.rotation.z=P.steer*Math.min(1,Math.abs(P.v)/30)*.06;body.rotation.x=-P.acc*.0025;body.position.y=Math.sin(t*22)*.02*Math.min(1,Math.abs(P.v)/20);
+ WH.forEach(w=>w.rotation.x+=P.v*dt/.55);FP.forEach(f=>f.rotation.y=P.steer*.5);
+ const f=sirenOn&&(t*6%2<1),g2=sirenOn&&!f;lr.material=f?mRon:mR;lbk.material=g2?mBon:mBl;
+ if(sirenOn){pl.intensity=2.5;pl.color.setHex(t*6%2<1?0xff0000:0x2255ff)}else pl.intensity=0;
+ if(mk.visible)mk.rotation.y+=dt;for(const o of OB)o.ar.rotation.z=ms==2&&tgt&&dist(o.g.position,tgt)<22?2.6+Math.sin(t*8)*.4:0;if(pat.g.visible){pat.ar.rotation.z=2.6+Math.sin(t*8)*.4;pat.g.rotation.y=Math.atan2(P.x-pat.g.position.x,P.z-pat.g.position.z)}$('sw').style.transform='rotate('+(-P.steer*100)+'deg)';
+ sky();if(state=='room'){hemi.intensity=.5;sun.intensity=0;stfUpd(dt);roomCam();ph!=2&&avMove(dt);navL();rph(dt)}else if(state=='edit'){hemi.intensity=.95;sun.intensity=.4;editCam()}else camUpd(dt);audio(0);$('dp').hidden=state!='room';if(state!='room'&&!$('nl').hidden)$('nl').hidden=true;if(state!='room'&&state!='edit'&&cam.view&&cam.view.enabled)cam.clearViewOffset();rd.render(sc,cam)}
+$('c').addEventListener('pointerdown',e=>{drag=true;lx=e.clientX;ly=e.clientY;idle=0});
+addEventListener('pointermove',e=>{if(!drag){if(e.pointerType=='mouse'&&(state=='play'||state=='room')){hov=true;oy=-(e.clientX/innerWidth-.5)*3.4;op=cl((e.clientY/innerHeight-.5)*24+8,-3,30);idle=0}return}oy-=(e.clientX-lx)*.006;op=cl(op+(e.clientY-ly)*.06,-3,30);lx=e.clientX;ly=e.clientY;idle=0});
+addEventListener('pointerup',()=>drag=false);addEventListener('pointercancel',()=>drag=false);
+addEventListener('wheel',e=>{zm=cl(zm*(1+e.deltaY*.001),.5,2.5)},{passive:true});
+// ===== v3: usuarios, avatares, salas, complicaciones =====
+const META={'Embarazo temprano':{wr:[5,8],s:'dolor abdominal fuerte y sangrado',rm:'eco'},'Náuseas intensas':{wr:[8,14],s:'vómitos continuos y deshidratación',rm:'cons'},'Preeclampsia':{wr:[28,36],s:'dolor de cabeza intenso y visión borrosa',rm:'mon'},'Sangrado tardío':{wr:[28,34],s:'sangrado rojo vivo sin dolor',rm:'eco'},'Trabajo de parto':{wr:[38,41],s:'contracciones regulares',rm:'parto'},'Hemorragia posparto':{wr:[39,41],s:'sangrado abundante tras el parto',rm:'parto'},'Diabetes gestacional':{wr:[24,30],s:'mucha sed, orina frecuente y glucosa alta',rm:'cons'},'Dolor en la parte baja':{wr:[26,34],s:'dolor en la parte baja del abdomen y contracciones',rm:'eco'}};
+POOL.o.push({t:'Dolor en la parte baja',q:[['Dolor bajo del abdomen y contracciones antes de las 37 semanas. ¿Qué sospechas?',['Gases normales','Amenaza de parto prematuro','Cansancio'],1,'Contracciones regulares antes de las 37 semanas sugieren amenaza de parto prematuro.'],['¿Qué evalúas?',['Solo el peso','Contracciones, cuello uterino y latidos del bebé','Nada'],1,'Se valoran contracciones, dilatación y bienestar fetal.'],['¿Qué medida puede indicarse?',['Ignorar el dolor','Hospitalizar y valorar corticoides según protocolo','Alta sin control'],1,'Los corticoides ayudan a madurar los pulmones del bebé.']]});
+const COMP=[['La paciente se complicó con hemorragia. ¿Qué haces primero?',['Esperar a ver si cede','Pedir ayuda, vía venosa y reponer líquidos','Llevarla caminando'],1,'Se activa al equipo y se estabiliza con líquidos y vía venosa.'],['¿Qué vigilas de cerca?',['Presión, pulso, sangrado y latidos del bebé','Solo la temperatura','Nada'],0,'La hemorragia puede causar shock: se monitoriza todo.']];
+const NC=[
+['Amenaza de aborto','sangrado leve y cólicos',[6,12],'eco',0,[['Sangrado leve y cólicos en el primer trimestre. ¿Qué sospechas?',['Amenaza de aborto','Parto inminente','Gastritis'],0,'Sangrado leve con cólicos al inicio del embarazo sugiere amenaza de aborto.'],['¿Qué estudio ayuda a ver si el embrión sigue vivo?',['Ecografía con latidos','Radiografía de tórax','Solo el peso'],0,'La ecografía confirma la ubicación, los latidos y la viabilidad.'],['¿Qué indicación inicial es adecuada?',['Reposo relativo y control según evaluación','Ejercicio intenso','Alta sin explicar signos de alarma'],0,'Se indica reposo relativo, vigilancia y volver si el sangrado aumenta.']]],
+['Embarazo ectópico','dolor pélvico intenso de un lado y mareo',[5,9],'eco',0,[['Dolor pélvico fuerte de un lado, sangrado y mareo. ¿Qué descartas primero?',['Embarazo ectópico','Resfriado','Caries'],0,'Es una emergencia: el embarazo fuera del útero puede romper la trompa y causar hemorragia.'],['¿Qué signo indica gravedad?',['Presión baja y pulso rápido','Apetito aumentado','Sueño'],0,'Hipotensión y taquicardia indican shock por sangrado interno.'],['¿Qué haces?',['Vía venosa y traslado urgente a cirugía','Enviarla a casa','Darle solo té'],0,'Se estabiliza y se deriva de inmediato para tratamiento.']]],
+['Infección urinaria','ardor al orinar y dolor en la espalda baja',[10,32],'cons',0,[['Ardor al orinar y dolor lumbar. ¿Qué sospechas?',['Infección urinaria','Contracciones','Anemia'],0,'La infección urinaria es frecuente y puede subir al riñón.'],['¿Por qué se trata aunque no haya síntomas?',['Puede causar parto prematuro y pielonefritis','Es solo una molestia','Mancha la ropa'],0,'La bacteriuria sin tratar aumenta el riesgo de pielonefritis y parto prematuro.'],['¿Qué recomiendas además del tratamiento indicado?',['Tomar abundante agua','Evitar líquidos','Retener la orina'],0,'Hidratarse y no retener la orina ayuda a evitar infecciones.']]],
+['Anemia','mucho cansancio, palidez y mareos',[14,34],'cons',0,[['Cansancio, palidez y mareos. ¿Qué examen pides?',['Hemoglobina','Solo radiografía','Prueba de audición'],0,'La hemoglobina confirma la anemia, muy común en la gestación.'],['¿Qué alimento ayuda?',['Sangrecita, lentejas o hígado','Gaseosas','Galletas solas'],0,'Los alimentos ricos en hierro de origen animal se absorben mejor.'],['¿Con qué se absorbe mejor el hierro?',['Con vitamina C (cítricos)','Con té o café','Con leche'],0,'El té, el café y los lácteos disminuyen la absorción del hierro.']]],
+['Ruptura de membranas','salida de líquido por la vagina',[30,36],'mon',0,[['Sale líquido por la vagina antes de tiempo. ¿Qué sospechas?',['Ruptura prematura de membranas','Orina normal','Flujo habitual'],0,'La salida de líquido amniótico antes del trabajo de parto es ruptura de membranas.'],['¿Qué riesgo principal vigilas?',['Infección y parto prematuro','Sueño','Estreñimiento'],0,'Sin la bolsa aumenta el riesgo de infección y de parto prematuro.'],['¿Qué evitas?',['Tactos vaginales innecesarios','Control de temperatura','Control de latidos'],0,'Los tactos repetidos aumentan el riesgo de infección.']]],
+['Movimientos fetales disminuidos','el bebé se mueve menos desde ayer',[28,40],'mon',0,[['Refiere que su bebé se mueve menos. ¿Qué haces?',['Evaluar el bienestar fetal con monitoreo','Decirle que espere','Darle el alta'],0,'Se evalúa con monitoreo fetal y ecografía sin demora.'],['¿Qué parámetro escuchas?',['Frecuencia cardiaca fetal','Ruido del pulmón de la madre','Solo el peso'],0,'La frecuencia cardiaca fetal normal está entre 110 y 160 latidos por minuto.'],['¿Qué puede indicar la disminución de movimientos?',['Falta de oxígeno del bebé','Nada','Que va a nacer sin riesgo'],0,'Puede ser señal de sufrimiento fetal por falta de oxígeno.']]],
+['Hipertensión gestacional','presión alta sin otros síntomas',[20,38],'mon',0,[['Presión de 150/95 sin otros síntomas. ¿Qué sospechas?',['Hipertensión gestacional','Presión normal','Solo ansiedad'],0,'Presión de 140/90 o más después de las 20 semanas es hipertensión gestacional.'],['¿Qué solicitas?',['Proteínas en orina y laboratorio','Solo reposo','Nada'],0,'Se busca daño de órganos para descartar preeclampsia.'],['¿Qué signo de alarma debe vigilar?',['Dolor de cabeza intenso o visión borrosa','Hambre','Sed leve'],0,'Son signos de preeclampsia severa.']]],
+['Vaginitis','flujo con mal olor y picazón',[8,36],'cons',0,[['Flujo con mal olor y picazón. ¿Qué haces primero?',['Evaluar el flujo y tomar muestra','Recetar sin evaluar','Ignorarlo'],0,'Se valora el tipo de flujo y se confirma la causa antes de tratar.'],['¿Por qué se trata en el embarazo?',['Puede causar ruptura de membranas o parto prematuro','Por estética','Nunca se trata'],0,'Las infecciones vaginales se asocian a parto prematuro.'],['¿Qué recomiendas?',['Ropa interior de algodón e higiene suave','Duchas vaginales','Perfumes íntimos'],0,'Las duchas vaginales alteran la flora y empeoran la infección.']]],
+['Control prenatal','viene a su control prenatal de rutina',[6,40],'cons',0,[['Viene a su control de rutina. ¿Qué mides en cada visita?',['Peso, presión y altura uterina','Solo el calzado','Nada'],0,'Son controles básicos para vigilar a la madre y el crecimiento del bebé.'],['¿Cuándo se recomienda empezar el control prenatal?',['Apenas se sabe del embarazo','En el noveno mes','Solo si hay dolor'],0,'Cuanto antes comience, mejor se previenen complicaciones.'],['¿Qué vacuna protege al recién nacido contra la tos ferina?',['dTpa desde las 27 semanas','Ninguna','Solo la de varicela'],0,'La dTpa en la gestación protege al bebé en sus primeros meses.']]],
+['Trombosis venosa','dolor e hinchazón en una sola pierna',[14,40],'cons',0,[['Dolor e hinchazón en una sola pierna. ¿Qué sospechas?',['Trombosis venosa profunda','Cansancio normal','Frío'],0,'El embarazo aumenta la coagulación y el riesgo de trombosis.'],['¿Qué complicación temes?',['Embolia pulmonar','Caries','Acné'],0,'Un coágulo puede viajar al pulmón: dolor de pecho y falta de aire.'],['¿Qué NO debes hacer?',['Masajear la pierna','Pedir evaluación urgente','Mantenerla en reposo'],0,'Masajear puede desprender el coágulo.']]],
+['Eclampsia','convulsiones y confusión',[32,40],'mon',0,[['Una gestante convulsiona. ¿Qué haces primero?',['Proteger la vía aérea y pedir ayuda','Darle agua','Sujetarla con fuerza'],0,'Se protege la vía aérea, se coloca de lado y se activa al equipo.'],['¿Qué medicamento previene nuevas convulsiones?',['Sulfato de magnesio','Paracetamol','Un antibiótico'],0,'El sulfato de magnesio es el tratamiento de elección.'],['¿Qué vigilas con el sulfato?',['Reflejos, respiración y orina','Solo el apetito','Nada'],0,'Se vigilan signos de toxicidad: reflejos, frecuencia respiratoria y diuresis.']]],
+['Colestasis del embarazo','picazón intensa en palmas y plantas',[28,38],'cons',0,[['Picazón intensa en palmas y plantas, sin lesiones. ¿Qué sospechas?',['Colestasis del embarazo','Alergia a un perfume','Sarna sin causa'],0,'Se manifiesta con picazón intensa, sobre todo de noche.'],['¿Qué examen pides?',['Ácidos biliares y pruebas de hígado','Radiografía','Solo glucosa'],0,'Se confirma con ácidos biliares y transaminasas elevadas.'],['¿Qué riesgo tiene para el bebé?',['Parto prematuro y muerte fetal','Ninguno','Solo piel seca'],0,'Requiere vigilancia fetal y a veces adelantar el parto.']]],
+['Embarazo prolongado','ya pasó su fecha probable de parto',[41,42],'mon',0,[['Pasó su fecha probable y no hay trabajo de parto. ¿Qué haces?',['Vigilar al bebé y planear el parto','Esperar sin control','Mandarla a casa'],0,'Pasadas las 41 semanas aumenta el riesgo para el bebé.'],['¿Qué estudio solicitas?',['Perfil biofísico o monitoreo fetal','Radiografía','Prueba de embarazo'],0,'Evalúan la salud del bebé y el líquido amniótico.'],['¿Qué signo la hace acudir de inmediato?',['Pérdida de líquido o falta de movimientos','Apetito','Sueño'],0,'Son signos de alarma al final del embarazo.']]],
+['Mastitis','dolor, enrojecimiento y fiebre en un pecho',[0,0],'cons',1,[['Dolor, enrojecimiento y fiebre en un pecho. ¿Qué sospechas?',['Mastitis','Hambre del bebé','Embarazo'],0,'Es una inflamación o infección de la mama durante la lactancia.'],['¿Debe dejar de dar de lactar?',['No, vaciar la mama ayuda','Sí, siempre','Solo biberón'],0,'Seguir amamantando y vaciar la mama ayuda a recuperarse.'],['¿Qué complicación puede aparecer?',['Absceso mamario','Caída del cabello','Tos'],0,'Si no se trata a tiempo puede formarse un absceso.']]],
+['Endometritis','fiebre y flujo con mal olor tras el parto',[0,0],'cons',1,[['Fiebre y flujo con mal olor días después del parto. ¿Qué sospechas?',['Endometritis','Cansancio','Lactancia normal'],0,'Es la infección del útero tras el parto.'],['¿Qué tratamiento corresponde?',['Antibióticos indicados por el médico','Solo reposo','Té de hierbas'],0,'Requiere antibióticos y vigilancia.'],['¿Qué signo indica gravedad?',['Fiebre alta con escalofríos y pulso rápido','Apetito','Sueño leve'],0,'Puede evolucionar a sepsis y requiere atención urgente.']]],
+['Tristeza posparto','mucha tristeza y falta de fuerzas para cuidar al bebé',[0,0],'cons',1,[['Una madre refiere mucha tristeza y sin fuerzas para cuidar al bebé. ¿Qué haces?',['Escucharla sin juzgar y derivar a salud mental','Decirle que ya se le pasará','Ignorarla'],0,'La depresión posparto es frecuente y tratable; requiere apoyo profesional.'],['¿Cuánto dura el llanto leve del posparto (baby blues)?',['Hasta unas 2 semanas','Meses','Años'],0,'Si dura más de 2 semanas o es intenso, se evalúa depresión posparto.'],['¿Qué ayuda al bienestar de la madre?',['Apoyo familiar y descanso','Aislarse','Dejar de comer'],0,'El apoyo de la pareja, la familia y el descanso favorecen la recuperación.']]],
+['Herida de cesárea','herida de cesárea enrojecida y con secreción',[0,0],'cons',1,[['Herida de cesárea enrojecida y con secreción. ¿Qué sospechas?',['Infección de herida operatoria','Cicatrización normal','Picadura'],0,'Enrojecimiento, calor, dolor y secreción indican infección.'],['¿Qué haces?',['Evaluar la herida y tomar cultivo si hay pus','Cubrirla sin mirar','Echar alcohol sin evaluar'],0,'Se valora, se limpia y se trata con antibiótico si corresponde.'],['¿Qué cuidado recomiendas?',['Mantener la herida limpia y seca','Tocarla con las manos sin lavar','Mojarla con ropa sucia'],0,'La higiene reduce el riesgo de infección.']]],
+['Embarazo molar','sangrado, náuseas muy intensas y barriga más grande de lo esperado',[8,14],'eco',0,[['Sangrado, náuseas intensas y útero más grande de lo esperado. ¿Qué sospechas?',['Embarazo molar','Gastritis','Embarazo normal'],0,'La mola cursa con náuseas intensas, sangrado y útero grande.'],['¿Qué examen ayuda?',['Ecografía y beta-hCG','Radiografía','Glucosa'],0,'La ecografía muestra una imagen típica y la hCG suele estar muy alta.'],['¿Qué se necesita después del tratamiento?',['Seguimiento con hCG','Nada','Ejercicio intenso'],0,'Se controla la hCG hasta normalizarse por riesgo de persistencia.']]],
+['Aborto incompleto','sangrado abundante con eliminación de tejido',[6,12],'eco',0,[['Sangrado abundante con eliminación de tejido. ¿Qué sospechas?',['Aborto incompleto','Menstruación normal','Infección de oído'],0,'Quedan restos en el útero y puede haber hemorragia.'],['¿Qué haces primero?',['Vía venosa y control de signos vitales','Enviarla a casa','Esperar sin control'],0,'Se estabiliza antes de decidir el tratamiento.'],['¿Qué tratamiento puede indicarse?',['Aspiración manual o medicamentos según el caso','Solo infusiones','Ejercicio'],0,'Se evacuan los restos para frenar el sangrado y evitar infección.']]],
+['Hipoglucemia','sudor frío, temblor y mareo (glucosa baja)',[8,36],'cons',0,[['Sudor frío, temblor y mareo en una gestante con diabetes. ¿Qué sospechas?',['Hipoglucemia','Hiperglucemia','Solo anemia'],0,'Son síntomas de glucosa baja.'],['¿Qué haces si está consciente?',['Darle algo azucarado y medir la glucosa','Darle insulina','Dejarla sin hacer nada'],0,'Se corrige rápido con azúcar y se controla la glucosa.'],['¿Cómo se previene?',['Comidas regulares y control de glucosa','Ayunar','Saltarse comidas'],0,'Los horarios regulares y el control evitan los descensos.']]],
+['Infección respiratoria','fiebre, tos y falta de aire',[6,38],'cons',0,[['Fiebre y tos en una gestante. ¿Qué evalúas?',['Signos vitales y saturación de oxígeno','Nada','Solo el peso'],0,'Las infecciones respiratorias pueden complicarse más en el embarazo.'],['¿Qué signo de alarma vigilas?',['Falta de aire o saturación baja','Hambre','Sueño'],0,'Respiración rápida o saturación baja necesitan atención urgente.'],['¿Qué medida protege?',['Vacunas al día y lavado de manos','Evitar los controles','Compartir vasos'],0,'La vacunación y la higiene reducen riesgos para madre y bebé.']]],
+['Parto inminente','ganas de pujar y se ve la cabeza del bebé',[38,41],'parto',0,[['Tiene ganas de pujar y se ve la cabeza del bebé. ¿Qué haces?',['Preparar el parto y guiar la respiración','Pedirle que cruce las piernas','Llevarla caminando lejos'],0,'Es el período expulsivo: se prepara el parto y se guía a la madre.'],['¿Qué posición favorece el parto?',['La que sea cómoda para ella','Solo una obligatoria','Boca abajo'],0,'Una posición cómoda y segura favorece el progreso del parto.'],['¿Qué haces tras el nacimiento?',['Contacto piel con piel y secar al bebé','Separarlo de inmediato','Dejarlo sin abrigo'],0,'El contacto piel con piel favorece la temperatura, el apego y la lactancia.']]],
+['Hemorroides y estreñimiento','dolor al evacuar y sangrado leve al limpiarse',[12,38],'cons',0,[['Dolor al evacuar y sangrado rojo leve al limpiarse. ¿Qué sospechas?',['Hemorroides por estreñimiento','Hemorragia uterina','Parto'],0,'El estreñimiento y la presión del útero favorecen las hemorroides.'],['¿Qué recomiendas?',['Fibra, agua y caminar','Laxantes fuertes sin indicación','Aguantar las ganas'],0,'La fibra y la hidratación mejoran el tránsito intestinal.'],['¿Cuándo consulta de urgencia?',['Si el sangrado es abundante','Nunca','Si come fruta'],0,'El sangrado abundante requiere evaluación.']]]];
+for(const [t,s,wr,rm,pp,q] of NC){META[t]={wr,s,rm,n:1,pp};POOL.o.push({t,q})}
+const mkPat=(c,at)=>{const r=META[c.t].wr;return{c,at,wk:r[0]+(R()*(r[1]-r[0]+1)|0),dy:R()*7|0}};
+const wlab=()=>cs().t=='Hemorragia posparto'?'posparto inmediato':META[cs().t].pp?'posparto · día '+(cs().d+1):cs().w+' sem + '+cs().d+' d';
+const ROOMN={eco:'Sala de ecografía',cons:'Consultorio',parto:'Sala de partos',mon:'Sala de monitoreo'};
+// salas
+const RG={};['eco','cons','parto','mon','urg','all'].forEach(k=>{RG[k]=new THREE.Group();sc.add(RG[k])});
+const rb=(k,w,h,d,m,x,y,z)=>box(w,h,d,m,RX+x,y,RZ+z,RG[k]);
+rb('eco',.8,1.1,.9,M(0xdfe6f5),-3,.55,-.4);rb('eco',.08,.6,.85,M(0x2a2a3a),-2.55,1.5,-.4);rb('eco',.02,.5,.75,B(0x1c2a48),-2.5,1.5,-.4);rb('eco',.02,.2,.28,B(0xb8c4dc),-2.49,1.5,-.4);rb('eco',.4,.45,.4,M(0xffd0e8),-1.8,.22,1.4);
+rb('cons',.05,1.8,.05,pm,2.4,.9,1.4);rb('cons',.2,.3,.08,B(0x9fe8ff),2.4,1.8,1.4);rb('cons',1.6,.8,.6,M(0xe6cfa8),-4,.4,3.2);rb('cons',.6,.4,.05,M(0x222233),-4,1.2,3);rb('cons',1.2,1.8,.45,M(0xf2f2ff),4.5,.9,-5.1);
+rb('parto',.9,.8,.6,wh,-3,.4,1.6);rb('parto',.8,.1,.5,B(0xffc6e0),-3,.85,1.6);rb('parto',.05,1.2,.05,pm,-3,1.4,1.6);rb('parto',1.2,.1,1.2,B(0xfff6d8),0,3.3,.2);rb('parto',.06,.7,.06,pm,0,3.65,.2);rb('parto',.4,.45,.4,M(0xffd0e8),2,.22,2);
+rb('mon',.4,.5,.7,M(0xdfe6f5),-2.6,1.2,-.4);rb('mon',.05,1.2,.05,pm,-2.6,.6,-.4);rb('mon',.02,.4,.55,B(0x10204a),-2.39,1.25,-.4);rb('mon',.02,.03,.45,B(0x30ff80),-2.38,1.25,-.4);rb('mon',.05,1.8,.05,pm,2.4,.9,1.4);rb('mon',.2,.3,.08,B(0xffe08a),2.4,1.8,1.4);
+
+const cv=(w,h,f)=>{const c=document.createElement('canvas');c.width=w;c.height=h;f(c.getContext('2d'),w,h);const x=new THREE.CanvasTexture(c);x.wrapS=x.wrapT=THREE.RepeatWrapping;return x};
+const wallT=cv(256,128,(g,w,h)=>{g.fillStyle='#b9d6dc';g.fillRect(0,0,w,h);g.fillStyle='#8fb7c4';g.fillRect(0,h*.62,w,h*.38);g.fillStyle='#e8e1d4';g.fillRect(0,h*.6,w,5);g.strokeStyle='#7aa3b2';g.lineWidth=2;for(let x=0;x<w;x+=32)g.strokeRect(x+4,h*.66,24,h*.28)}),
+tileT=cv(64,64,g=>{g.fillStyle='#7ea7b5';g.fillRect(0,0,64,64);g.fillStyle='#6a93a2';g.fillRect(0,0,32,32);g.fillRect(32,32,32,32);g.strokeStyle='#5b8493';g.strokeRect(0,0,64,64)}),
+usT=cv(128,96,g=>{g.fillStyle='#050912';g.fillRect(0,0,128,96);const gr=g.createRadialGradient(64,0,5,64,0,95);gr.addColorStop(0,'#aab4c8');gr.addColorStop(1,'#1a2234');g.fillStyle=gr;g.beginPath();g.moveTo(64,0);g.lineTo(8,92);g.lineTo(120,92);g.closePath();g.fill();g.fillStyle='#e8ecf4';g.beginPath();g.ellipse(64,52,20,15,0,0,6.3);g.fill();g.beginPath();g.arc(50,44,9,0,6.3);g.fill()});
+wallT.repeat.set(3,1);tileT.repeat.set(10,8);
+const wallM=new THREE.MeshLambertMaterial({map:wallT,side:THREE.BackSide}),ceilM=new THREE.MeshLambertMaterial({color:0xdfe6ea,side:THREE.BackSide}),winM=new THREE.MeshBasicMaterial({color:0x8fdcff}),alM=B(0xff2030),wf=M(0xf4efe6),cu=M(0xe8799f),usM=new THREE.MeshBasicMaterial({map:usT}),mt=M(0xcfd8dc);
+rr.material=[wallM,wallM,ceilM,ceilM,wallM,wallM];
+const ra=(w,h,d,m,x,y,z)=>box(w,h,d,m,RX+x,y,RZ+z,RG.all);
+ra(14,.02,11,new THREE.MeshLambertMaterial({map:tileT}),0,.11,0);
+for(const x of[-4.6,2.2]){ra(2.2,1.5,.05,winM,x,2.3,-5.46);ra(2.4,.1,.08,wf,x,3.08,-5.44);ra(2.4,.1,.08,wf,x,1.52,-5.44);ra(.08,1.6,.08,wf,x-1.1,2.3,-5.44);ra(.08,1.6,.08,wf,x+1.1,2.3,-5.44);ra(.06,1.5,.06,wf,x,2.3,-5.43);ra(.4,1.9,.12,cu,x-1.4,2.2,-5.38);ra(.4,1.9,.12,cu,x+1.4,2.2,-5.38)}
+ra(14,.22,.06,wf,0,.22,-5.47);ra(14,.22,.06,wf,0,.22,5.47);ra(.06,.22,11,wf,-6.97,.22,0);ra(.06,.22,11,wf,6.97,.22,0);
+ra(.4,.4,.4,M(0xb5651d),5.6,.2,-4.6);ra(.7,.9,.7,M(0x2f8f5f),5.6,.85,-4.6);
+ra(.05,.5,.5,B(0xffffff),-6.95,3,0);ra(.07,.2,.03,M(0x333344),-6.93,3.05,0);ra(.07,.03,.2,M(0x333344),-6.93,3,.05);
+ra(.6,.9,2.2,M(0xe6dcc8),6.65,.45,-1.5);ra(.62,.06,2.3,M(0x6b7b84),6.65,.93,-1.5);ra(.4,.05,.6,B(0xb8d8e0),6.65,.96,-1.5);ra(.1,.3,.1,mt,6.9,1.15,-1.5);ra(.35,.5,.35,M(0x4f6a7a),6.4,.25,1.6);
+ra(.04,1.1,.8,M(0xf2d9e6),6.96,2.2,2.5);ra(.05,.5,.4,cu,6.94,2.2,2.5);
+for(const x of[-3,0,3])ra(1.6,.04,.8,B(0xfff3dc),x,3.97,0);
+// ecografía
+rb('eco',.5,.8,.5,mt,-3.6,.4,1.2);rb('eco',.12,.3,.12,B(0x6fd6ff),-3.6,.95,1.2);rb('eco',.01,.5,.75,usM,-2.48,1.5,-.4);rb('eco',.06,1.1,1.8,B(0x10182c),-6.9,2.1,-.5);rb('eco',.02,.95,1.65,usM,-6.86,2.1,-.5);
+// consultorio
+rb('cons',.5,.12,.5,M(0x4a5a64),3.2,.06,2.8);rb('cons',.05,1.3,.05,pm,3.2,.7,2.8);rb('cons',.5,.5,.5,M(0x5b6fa8),-4,.25,2.4);rb('cons',1.4,1,.04,M(0xfff0f6),-1.8,2.2,-5.4);rb('cons',1.2,.12,.05,cu,-1.8,2.5,-5.38);
+// sala de partos
+rb('parto',1,.8,.6,M(0xe9eef2),4,.4,-2);rb('parto',.8,.1,.5,B(0xbfe6ff),4,.85,-2);rb('parto',.8,.05,.5,B(0xffa860),4,1.9,-2);rb('parto',.05,1,.05,pm,3.65,1.4,-2);rb('parto',.05,1,.05,pm,4.35,1.4,-2);rb('parto',.25,.9,.25,M(0x2f8f5f),-5.5,.45,-3.5);rb('parto',.9,.8,.5,mt,-5,.4,0);rb('parto',.05,.5,.05,pm,-3.4,1.1,2.1);rb('parto',.05,.5,.05,pm,-2.6,1.1,2.1);
+// monitoreo
+rb('mon',.05,2,.05,pm,3.5,1,-2.5);rb('mon',.25,.35,.1,B(0xdff6ff),3.5,2.1,-2.5);rb('mon',1.6,.9,.04,B(0x0b1630),-1.8,2.3,-5.4);rb('mon',1.4,.03,.05,B(0x30ff80),-1.8,2.3,-5.38);rb('mon',.5,.5,.5,M(0x5b6fa8),3.8,.25,2.6);
+// urgencia (hemorragia)
+rb('urg',.9,1,.6,M(0xd63a4a),-5,.5,-2);rb('urg',.8,.03,.5,M(0x333344),-5,1.02,-2);rb('urg',.25,1,.25,M(0x2f8f5f),-5.9,.5,-3);rb('urg',.05,2,.05,pm,2.2,1,-2);rb('urg',.25,.35,.1,B(0xc01830),2.2,2.1,-2);rb('urg',.9,.02,.55,B(0xb01020),0,.99,.75);rb('urg',.4,.2,.4,alM,0,3.85,-4);
+const rkey=()=>{const c=cs(),w=c.w+(c.d||0)/7,t=c.t;if(META[t].n)return META[t].rm;return t=='Hemorragia posparto'||t=='Trabajo de parto'?'parto':t=='Preeclampsia'?'mon':t=='Embarazo temprano'||(w>=24&&(t=='Sangrado tardío'||t=='Dolor en la parte baja'))?'eco':'cons'};
+function vit(){const c=cs(),x=cx,pa=c.t=='Preeclampsia'?'160/110':['118/76','100/62','82/50'][x],fc=[82,108,128][x]+(R()*6|0),ff=[140,152,172][x]+(R()*6|0),sp=[98,95,88][x];
+ $('vt').innerHTML=[['PA',pa,x>1||c.t=='Preeclampsia'],['FC',fc,x>0],['FCF',ff,x>1],['SpO₂',sp+'%',x>1]].map(a=>'<span'+(a[2]?' class="al"':'')+'>'+a[0]+'<b>'+a[1]+'</b></span>').join('')}
+$('rv').onclick=()=>{$('rpn').hidden=!$('rpn').hidden};
+let roomA=.6;const RT=[null];for(let i=1;i<12;i++){const g=new THREE.Group();sc.add(g);RT.push(g)}
+const rt_=(i,w,h,d,m,x,y,z)=>box(w,h,d,m,RX+x,y,RZ+z,RT[i]);
+// equipo básico
+ra(1.6,.5,.06,M(0xdde3e8),0,1.4,-5.45);for(const[x,c]of[[-.4,0x30c060],[0,0xffd24d],[.4,0x3a8cff]])ra(.16,.16,.08,B(c),x,1.4,-5.4);
+ra(.5,.7,.5,wf,-1.7,.35,.8);ra(.2,.25,.2,B(0xffe9a8),-1.7,.82,.8);
+ra(2.4,.9,.5,M(0xcdbfa8),-.2,.45,5.1);ra(2.4,.06,.56,mt,-.2,.92,5.1);ra(2.4,.05,.4,wf,-.2,1.7,5.2);
+for(let k=0;k<4;k++)ra(.5,.3,.3,M([0xff7a7a,0x7ad0ff,0xffe07a,0x9aff9a][k]),-.9+k*.6,1.1,5.1);
+for(let k=0;k<5;k++)ra(.3,.35,.25,M([0xf4efe6,0xc9e4f5,0xf7d6e0,0xdff5d6,0xfff0c0][k]),-1+k*.5,1.9,5.2);
+ra(.7,.08,.7,M(0x3a4a8f),-6,.5,4.3);ra(.7,.7,.08,M(0x3a4a8f),-6,.9,4.62);ra(.06,.5,.5,M(0x222222),-6.4,.25,4.3);ra(.06,.5,.5,M(0x222222),-5.6,.25,4.3);
+ra(.35,.5,.35,M(0xc0392b),6.4,.25,2.4);ra(.05,2,.05,pm,1.7,1,-1.4);ra(.22,.32,.1,B(0xdff6ff),1.7,2.1,-1.4);
+// mejoras según el nivel del hospital (cada 50 pts)
+rt_(1,.8,.5,.5,mt,2.1,.25,1.9);rt_(1,.9,.25,.55,B(0xbfe6ff),2.1,.62,1.9);rt_(1,.5,.9,.5,M(0xdfe6f5),-1.9,.45,-.9);rt_(1,.4,.3,.05,B(0x10204a),-1.9,1.05,-.65);rt_(1,.04,.8,1.2,M(0xe8f1ff),-6.95,2.4,-3);
+rt_(2,2.8,.5,1.2,mt,-4.9,.5,-4.5);rt_(2,2.6,.2,1.1,wh,-4.9,.85,-4.5);rt_(2,2.8,2,.05,M(0x9fc9e0),-4.9,2.1,-3.7);rt_(2,.5,2,1.6,M(0xb5a58a),-6.7,1,-1.6);
+rt_(3,.7,1,.5,red,2.2,.5,-4.7);rt_(3,.5,.25,.05,B(0x30ff80),2.2,1.2,-4.45);rt_(3,1.2,.1,.7,mt,5.4,.5,3.6);rt_(3,1.2,.5,.7,B(0xcfe9ff),5.4,.95,3.6);
+rt_(4,.8,.5,1.8,M(0x5b6fa8),-6.4,.25,2.4);rt_(4,.2,.6,1.8,M(0x5b6fa8),-6.8,.7,2.4);rt_(4,2.2,1.1,.06,B(0x10182c),-2.1,2.4,-5.45);rt_(4,2,.95,.02,usM,-2.1,2.4,-5.41);
+rt_(5,1.4,.1,1.4,B(0xfff6d8),0,3.4,.2);rt_(5,.06,.7,.06,pm,0,3.75,.2);rt_(5,.9,1.8,.8,M(0xd63a4a),6.4,.9,3.9);rt_(5,.7,.9,.7,M(0x2f8f5f),-6,.45,-.5);
+rt_(6,2,1,.05,B(0xffe9f4),-.2,2.3,5.4);
+rt_(7,.5,.5,.5,M(0xb5651d),-6.2,.25,-4.4);rt_(7,.7,.9,.7,M(0x2f8f5f),-6.2,.85,-4.4);
+rt_(8,1.4,.9,.5,mt,-5.8,.45,-5);rt_(8,1.2,.3,.4,B(0x30c0ff),-5.8,1.05,-5);
+rt_(9,3,1.6,.05,B(0xcdeeff),4.2,2.6,-5.45);
+rt_(10,2,.5,.8,M(0xff9ab8),3.5,.25,4.7);rt_(10,2,.6,.2,M(0xff9ab8),3.5,.7,5.1);
+rt_(11,3.2,.4,.05,B(0xffe14d),0,3.6,-5.45);rt_(11,.8,.1,.8,B(0xfff6d8),4,3.9,2);
+function setRoom(){const k=rkey();for(const x in RG)RG[x].visible=x==k||x=='all'||(x=='urg'&&cx==2);for(let i=1;i<12;i++)RT[i].visible=HT()>=i}
+const hit_=(x,z)=>Math.abs(x-RX)<1.5&&z>RZ-1.7&&z<RZ+2.1;
+function avMove(dt){if(!av)return;const a=roomA,fx=-Math.sin(a),fz=-Math.cos(a),rx_=Math.cos(a),rz_=-Math.sin(a),
+ u=(K.ArrowUp||K.KeyW||K.dU?1:0)-(K.ArrowDown||K.KeyS||K.dD?1:0),r_=(K.ArrowRight||K.KeyD||K.dR?1:0)-(K.ArrowLeft||K.KeyA||K.dL?1:0);
+ let dx=fx*u+rx_*r_,dz=fz*u+rz_*r_;const m=Math.hypot(dx,dz),g=av.g;
+ if(m>0){dx/=m;dz/=m;const nx=cl(g.position.x+dx*2.4*dt,RX-6.3,RX+6.3),nz=cl(g.position.z+dz*2.4*dt,RZ-4.9,RZ+4.9);
+  if(!hit_(nx,g.position.z))g.position.x=nx;if(!hit_(g.position.x,nz))g.position.z=nz;
+  g.rotation.y=Math.atan2(dx,dz);const k=Math.sin(t*9)*.8;av.l.rotation.x=k;av.r.rotation.x=-k;av.al.rotation.x=-k;av.ar.rotation.x=k;g.position.y=Math.abs(Math.sin(t*9))*.04}
+ else{av.l.rotation.x=av.r.rotation.x=0;av.al.rotation.x=av.ar.rotation.x=Math.sin(t*2)*.05;g.position.y=Math.sin(t*2)*.01}}
+const nv_=new THREE.Vector3();
+function navL(){if(!av||!prof)return;const e=$('nl');cam.updateMatrixWorld();nv_.set(av.g.position.x,2.3,av.g.position.z).project(cam);
+ e.hidden=nv_.z>1;e.textContent=prof.n;e.style.left=(nv_.x*.5+.5)*innerWidth+'px';e.style.top=(-nv_.y*.5+.5)*innerHeight+'px'}
+function stfUpd(dt){for(const s of STF){const g=s.p.g,w=s.w[s.i%s.w.length];
+ if(s.pause>0){s.pause-=dt;s.p.ar.rotation.x=-1.1+Math.sin(t*3+s.i)*.2;s.p.l.rotation.x=s.p.r.rotation.x=0;continue}
+ const dx=w[0]-g.position.x,dz=w[1]-g.position.z,d=Math.hypot(dx,dz);
+ if(d<.15){s.i++;s.pause=1.5+R()*2;g.rotation.y=Math.atan2(RX-g.position.x,RZ-g.position.z);continue}
+ const sp=(cx==2?2.2:1.1)*dt;g.position.x+=dx/d*sp;g.position.z+=dz/d*sp;g.rotation.y=Math.atan2(dx,dz);const k=Math.sin(t*7)*.7;s.p.l.rotation.x=k;s.p.r.rotation.x=-k;s.p.al.rotation.x=-k;s.p.ar.rotation.x=k}}
+function roomCam(){const a=oy+.6,r=cl(4.8*zm,2.5,5.2);roomA=a;cam.position.set(RX+Math.sin(a)*r,cl(2.4+op*.04,1.6,3.4),RZ+Math.cos(a)*r);cam.lookAt(RX,1.2,RZ);winM.color.copy(sc.background);alM.color.setHex(t*4%2<1?0xff2030:0x550010);rl.color.setHex(cx==2?0xffb8b8:0xfff2f8);const sh=$('rpn').hidden?0:Math.min(250,innerWidth*.46)/2;cam.setViewOffset(innerWidth,innerHeight,-sh,0,innerWidth,innerHeight)}
+// personajes
+const SKIN=[0x452a1a,0x6b4228,0x93603a,0xb87a4b,0xd19a6a,0xe8b48a,0xf5c9a6,0xffe0cc],HAIRC=[0x1a1a1a,0x3b2314,0x6b4423,0xa66a2b,0xe0b04a,0xc23b22,0x9aa0a6,0xff7ab8],EYEC=[0x3a2210,0x6b4423,0x8a6a2a,0x3f7f3f,0x2f6fd0,0x6fa8dc,0x7a7f86,0x7a4ac8],BASEC=[0xffffff,0x19d3a8,0x6aa8ff,0xff7ab8,0xffd24d,0xb18cff,0x4a4f6a,0xff9a6a];
+const PC=[['#ff7ab8','#ffffff'],['#19d3a8','#ffffff'],['#6aa8ff','#ffffff'],['#ffd24d','#4a4f6a'],['#b18cff','#ffffff'],['#ff9a6a','#ffffff'],['#ff7ab8','#6aa8ff']],TX={};
+const ES=[[.06,.06,0],[.085,.085,0],[.085,.035,.25],[.08,.05,.12],[.045,.045,0],[.075,.05,-.15],[.05,.085,0],[.1,.05,0]],ESN=['Redondos','Grandes','Rasgados','Almendrados','Pequeños','Caídos','Ovalados','Anchos'];
+const HN={m:['Rapado','Corto','Lateral','Puntas','Afro','Barba','Moño','Mohicano'],f:['Bob','Largo','Coleta','Moño','Trenzas','Afro','Flequillo','Pixie']};
+const HS={m:[[[.32,.04,.32,0,1.81,0]],[[.33,.1,.33,0,1.83,0],[.33,.22,.06,0,1.72,-.14]],[[.33,.12,.33,0,1.84,0],[.05,.2,.3,-.17,1.72,0],[.05,.2,.3,.17,1.72,0]],[[.33,.06,.33,0,1.82,0],[.06,.16,.06,-.1,1.92,0],[.06,.2,.06,0,1.93,0],[.06,.16,.06,.1,1.92,0]],[[.5,.32,.46,0,1.84,-.02]],[[.28,.12,.04,0,1.55,.15]],[[.33,.1,.33,0,1.83,0],[.14,.14,.14,0,1.97,-.04]],[[.07,.2,.34,0,1.88,0]]],
+f:[[[.34,.1,.34,0,1.83,0],[.4,.3,.12,0,1.63,-.15],[.06,.28,.3,-.19,1.63,0],[.06,.28,.3,.19,1.63,0]],[[.34,.1,.34,0,1.83,0],[.38,.7,.1,0,1.45,-.17],[.05,.5,.1,-.19,1.55,-.1],[.05,.5,.1,.19,1.55,-.1]],[[.34,.1,.34,0,1.83,0],[.34,.18,.06,0,1.72,-.15],[.09,.42,.09,0,1.55,-.2]],[[.34,.1,.34,0,1.83,0],[.34,.2,.06,0,1.72,-.15],[.18,.18,.18,0,1.99,-.05]],[[.34,.1,.34,0,1.83,0],[.08,.6,.08,-.2,1.45,-.05],[.08,.6,.08,.2,1.45,-.05]],[[.52,.34,.48,0,1.85,-.02]],[[.34,.1,.34,0,1.83,0],[.34,.08,.04,0,1.77,.15],[.38,.3,.1,0,1.63,-.15]],[[.33,.08,.33,0,1.83,0],[.05,.1,.28,-.17,1.76,0],[.05,.1,.28,.17,1.76,0]]]};
+function drawPat(g,k){g.fillStyle=PC[k][1];g.fillRect(0,0,64,64);g.fillStyle=g.strokeStyle=PC[k][0];g.lineWidth=6;
+ if(k==0)for(let x=0;x<64;x+=16)g.fillRect(x,0,8,64);
+ else if(k==1)for(let x=8;x<64;x+=16)for(let y=8;y<64;y+=16){g.beginPath();g.arc(x,y,4,0,6.3);g.fill()}
+ else if(k==2)for(let x=0;x<64;x+=16)for(let y=0;y<64;y+=16){if(((x+y)/16)%2==0)g.fillRect(x,y,16,16)}
+ else if(k==3)for(let x=-64;x<64;x+=16){g.beginPath();g.moveTo(x,64);g.lineTo(x+64,0);g.stroke()}
+ else if(k==4){g.beginPath();for(let x=0;x<=64;x+=8)g.lineTo(x,(x/8)%2?20:44);g.stroke()}
+ else if(k==5)for(let x=8;x<64;x+=16)for(let y=8;y<64;y+=16){g.fillRect(x-4,y-1,8,2);g.fillRect(x-1,y-4,2,8)}
+ else{const gr=g.createLinearGradient(0,0,0,64);gr.addColorStop(0,PC[k][0]);gr.addColorStop(1,PC[k][1]);g.fillStyle=gr;g.fillRect(0,0,64,64)}}
+function weave(g){g.globalAlpha=.1;for(let i=0;i<128;i+=4){g.fillStyle='#000';g.fillRect(0,i,128,1);g.fillRect(i,0,1,128);g.fillStyle='#fff';g.fillRect(0,i+2,128,1);g.fillRect(i+2,0,1,128)}g.globalAlpha=1;const r=g.createLinearGradient(0,0,128,0);r.addColorStop(0,'rgba(0,0,0,.18)');r.addColorStop(.3,'rgba(255,255,255,.08)');r.addColorStop(.7,'rgba(0,0,0,.05)');r.addColorStop(1,'rgba(0,0,0,.18)');g.fillStyle=r;g.fillRect(0,0,128,128)}
+function mat(i){if(TX[i])return TX[i];const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');
+ if(i<8){g.fillStyle='#'+BASEC[i].toString(16).padStart(6,'0');g.fillRect(0,0,128,128)}else{g.save();g.scale(2,2);drawPat(g,i-8);g.restore()}weave(g);
+ const x=new THREE.CanvasTexture(c);x.wrapS=x.wrapT=THREE.RepeatWrapping;const m=new THREE.MeshPhongMaterial({map:x,shininess:14,specular:0x222222});return TX[i]=m}
+const SD=new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:.17}),HI=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.22});
+const SHO={m:[
+[[.22,.1,.32,'s',0,-.75,.04],[.22,.03,.34,'b',0,-.79,.04]],
+[[.24,.06,.34,'w',0,-.77,.04],[.22,.08,.3,'s',0,-.7,.04]],
+[[.22,.24,.3,'s',0,-.67,.02],[.22,.04,.34,'b',0,-.79,.04]],
+[[.2,.09,.38,'s',0,-.75,.07],[.22,.03,.34,'b',0,-.79,.04]],
+[[.2,.03,.3,'s',0,-.78,.03],[.2,.05,.1,'k',0,-.74,.1]],
+[[.26,.14,.36,'s',0,-.72,.05],[.14,.02,.14,'b',0,-.64,.05]],
+[[.22,.08,.3,'s',0,-.7,.03],[.24,.12,.32,'w',0,-.77,.03]],
+[[.24,.06,.34,'w',0,-.77,.04],[.22,.2,.3,'s',0,-.67,.02]]],
+f:[
+[[.22,.07,.32,'w',0,-.77,.04],[.2,.07,.28,'s',0,-.71,.04]],
+[[.2,.06,.28,'s',0,-.77,.03],[.05,.16,.05,'s',0,-.7,-.08]],
+[[.2,.03,.3,'s',0,-.78,.03],[.14,.05,.12,'s',0,-.75,.1]],
+[[.22,.24,.3,'s',0,-.67,.02],[.22,.04,.34,'b',0,-.79,.04],[.04,.1,.05,'s',0,-.74,-.1]],
+[[.2,.03,.28,'s',0,-.78,.03],[.05,.12,.05,'s',0,-.72,-.08],[.2,.04,.07,'k',0,-.75,.1]],
+[[.26,.14,.36,'s',0,-.72,.05],[.14,.02,.14,'b',0,-.64,.05]],
+[[.22,.08,.3,'s',0,-.7,.03],[.24,.12,.32,'w',0,-.77,.03]],
+[[.24,.06,.34,'w',0,-.77,.04],[.22,.2,.3,'s',0,-.67,.02]]]};
+function mkChar(L){const g=new THREE.Group(),f=L.g=='f',sk=M(SKIN[L.sk]),tp=mat(L.tp),bt=mat(L.bt),sm=mat(L.sc),hm=M(HAIRC[L.hc]);
+ const P_=(w,h,d,m,x,y,z,p)=>{const o=new THREE.Mesh(bx,m);o.scale.set(w,h,d);o.position.set(x,y,z);if(Math.min(w,h,d)>.035)olo(o);(p||g).add(o);return o};
+ const TMd=L.tm|0,BMd=L.bm|0,dress=f&&TMd==5,sl=[1,1,2,2,2,0,1,2][TMd],SH=SHO[L.g][(L.st|0)%8],
+ LN=dress?0:f?[.8,0,0,.32,.8,0,.8,.8][BMd]:[.8,.32,.8,.5,.8,.8,.8,.8][BMd],SKH=dress?0:f?[0,.3,.62,0,0,.45,0,0][BMd]:0,WL=f&&BMd==7?.28:f&&BMd==4?.16:.2,CF=!dress&&(f?BMd==6:BMd==4);
+ if(TMd==3){P_(.54,1.05,.32,tp,0,.95,0);for(const s of[-1,1])P_(.1,.45,.02,M(0xdde3e8),s*.1,1.3,.17)}else P_(.5,.65,.28,tp,0,1.15,0);
+ if(dress)P_(.64,.5,.36,tp,0,.66,0);if(SKH)P_(.58,SKH,.36,bt,0,.86-SKH/2,0);
+ if(TMd==1)P_(.16,.18,.02,sk,0,1.43,.145);if(TMd==2||TMd==6)P_(.3,.06,.3,M(0xf4f4f4),0,1.5,0);if(TMd==2||TMd==4||TMd==6)P_(.03,.62,.02,M(0xcccccc),0,1.15,.145);
+ if(TMd==4)P_(.34,.08,.32,tp,0,1.5,0);if(TMd==7){P_(.38,.16,.16,tp,0,1.52,-.18);P_(.34,.12,.02,M(0xd0d0d8),0,.95,.145)}
+ if(!f&&BMd==5)P_(.52,.05,.3,M(0x333344),0,.83,0);if(!f&&BMd==7)P_(.52,.05,.3,M(0x222222),0,.83,0);
+ if(TMd!=3){P_(.505,.03,.285,SD,0,.84,0);P_(.505,.02,.285,SD,0,1.45,0);for(const s of[-1,1])P_(.012,.6,.285,SD,s*.245,1.15,0)}
+ if(TMd==0||TMd==5||TMd==7)P_(.2,.035,.292,SD,0,1.46,0);
+ if(TMd==2||TMd==6)for(let k=0;k<4;k++)P_(.025,.025,.01,M(0xf4f4f0),0,1.38-k*.1,.143);
+ if(TMd==1){P_(.11,.1,.01,HI,.1,1.22,.142);P_(.11,.012,.01,SD,.1,1.17,.142);P_(.2,.03,.01,HI,0,1.45,.142)}
+ if(TMd==3){for(let k=0;k<3;k++)P_(.03,.03,.01,M(0xc8d0d8),0,1.0-k*.16,.171);P_(.12,.1,.01,SD,.15,.78,.171);P_(.54,.03,.32,SD,0,.44,0)}
+ if(dress){P_(.505,.035,.292,SD,0,.9,0);P_(.12,.06,.02,HI,0,.9,.15);P_(.645,.03,.365,HI,0,.42,0)}
+ if(SKH>0){for(const x of[-.2,-.1,.1,.2])P_(.012,SKH*.96,.37,SD,x,.86-SKH/2,0);P_(.585,.03,.365,SD,0,.86-SKH+.015,0)}
+ if(!dress&&!SKH&&(f?BMd==0||BMd==3:BMd<4)){P_(.505,.045,.285,M(0x3a2a1e),0,.835,0);P_(.06,.05,.01,M(0xd4b24c),0,.835,.143)}
+ P_(.3,.3,.3,sk,0,1.65,0);P_(.08,.02,.02,M(0xc4566e),0,1.57,.155);P_(.04,.05,.04,sk,0,1.63,.17);
+ for(const s of[-1,1]){P_(.04,.08,.05,sk,s*.17,1.65,0);P_(.1,.03,.02,hm,s*.07,1.77,.153)}
+ const es=ES[L.es];for(const s of[-1,1]){P_(es[0],es[1],.02,M(0xffffff),s*.07,1.68,.152).rotation.z=s*es[2];P_(es[0]*.55,es[1]*.85,.02,M(EYEC[L.ec]),s*.07,1.68,.16).rotation.z=s*es[2]}
+ const arm=x=>{const a=limb(g,.14,.62,sl==2?tp:sk,x,1.45);if(sl==1){P_(.16,.26,.16,tp,0,-.13,0,a);P_(.165,.025,.165,SD,0,-.25,0,a)}if(sl==2){P_(.145,.05,.145,SD,0,-.54,0,a);P_(.145,.012,.145,HI,0,-.5,0,a)}P_(.12,.14,.12,sk,0,-.66,0,a);return a},al=arm(-.34),ar=arm(.34),
+ leg=x=>{const l=limb(g,WL,.8,LN>=.8?bt:sk,x,.8),sg_=Math.sign(x);if(LN>=.8){P_(.012,.76,WL*.98,SD,sg_*(WL/2+.002),-.4,0,l);P_(WL+.012,.04,WL+.012,SD,0,-.77,0,l);if(!f&&BMd==2)P_(.035,.15,.11,bt,sg_*(WL/2+.015),-.32,0,l);if(!f&&BMd==5){P_(.07,.012,.01,M(0xd9a83a),-sg_*.03,-.1,WL/2+.004,l);P_(.012,.7,.01,M(0xd9a83a),sg_*.07,-.4,WL/2+.004,l)}}if(LN>0&&LN<.8)P_(WL+.015,LN,WL+.015,bt,0,-LN/2,0,l);if(CF)P_(WL+.04,.06,WL+.04,M(0x333344),0,-.72,0,l);SH.forEach(b=>P_(b[0],b[1],b[2],b[3]=='s'?sm:b[3]=='w'?M(0xffffff):b[3]=='k'?sk:M(0x222222),b[4],b[5],b[6],l));if(({m:[1,3,7],f:[0,7]})[L.g].includes(L.st|0)){P_(.1,.02,.12,M(0xffffff),0,-.685,.08,l);P_(.2,.012,.03,HI,0,-.72,.2,l)}return l},l=leg(-.13),r=leg(.13);
+ HS[L.g][L.hr].forEach(b=>P_(b[0],b[1],b[2],hm,b[3],b[4],b[5]));
+ if(L.gl){const lm=M(L.gl==3?0x111111:0x9fd8ff);P_(.3,.03,.03,M(0x333333),0,1.68,.165);for(const s of[-1,1])P_(L.gl==2?.11:.09,L.gl==2?.08:.09,.02,lm,s*.07,1.68,.17)}
+ const H=[null,[[.36,.16,.36,0x19d3a8,0,1.84,0],[.36,.18,.06,0x19d3a8,0,1.72,-.16]],[[.35,.1,.35,0x5a7cff,0,1.85,0],[.3,.03,.16,0x5a7cff,0,1.82,.22]],[[.7,.03,.7,0xe8c97a,0,1.83,0],[.3,.16,.3,0xe8c97a,0,1.92,0]],[[.36,.2,.36,0xff7ab8,0,1.86,0],[.1,.1,.1,0xffffff,0,2,0]]][L.ht];
+ if(H)H.forEach(b=>P_(b[0],b[1],b[2],M(b[3]),b[4],b[5],b[6]));
+ const tm=M(0x2a3a7a);if(L.tt==1||L.tt==2)P_(.15,.26,.15,tm,0,-.3,0,ar);if(L.tt==2)P_(.15,.26,.15,tm,0,-.3,0,al);if(L.tt==3)P_(.2,.05,.02,tm,0,1.5,.14);
+ if(L.ex==1){const d=M(0x444444);P_(.4,.04,.04,d,0,1.45,.14);P_(.04,.3,.03,d,0,1.3,.15);P_(.1,.1,.03,M(0xbbbbbb),0,1.15,.15)}else if(L.ex==2)P_(.3,.12,.03,M(0x9fe8ff),0,1.58,.16);else if(L.ex==3){for(const s of[-1,1])P_(.04,.08,.04,M(0xffd24d),s*.17,1.58,0)}else if(L.ex==4)P_(.15,.05,.15,M(0x333333),0,-.55,0,al);
+ return{g,l,r,al,ar}}
+const LK=(g,d)=>d?{g,sk:3,hr:0,hc:0,es:1,ec:1,tp:3,bt:6,st:1,sc:7,gl:0,ht:2,tt:0,ex:0,tm:4,bm:0}:{g,sk:5,hr:1,hc:1,es:0,ec:0,tp:1,bt:6,st:0,sc:6,gl:0,ht:0,tt:0,ex:1,tm:1,bm:0};
+// cuentas
+let DB={users:{},last:null},prof=null,drv=null;try{DB=JSON.parse(localStorage.getItem('amb911'))||DB}catch(e){}
+const saveDB=()=>{try{localStorage.setItem('amb911',JSON.stringify(DB))}catch(e){}};
+function saveU(){if(prof){prof.sc=score;DB.users[prof.n]=prof;DB.last=prof.n;saveDB()}}
+function login(n){prof=DB.users[n];user.g=prof.A.g;user.r='o';score=prof.sc||0;DB.last=n;saveDB();chkTier(true)}
+function buildAv(){if(av){sc.remove(av.g);const i=STF.indexOf(av.st);if(i>=0)STF.splice(i,1)}
+ av=mkChar(prof?prof.A:LK('f',0));av.g.position.set(RX+1.2,0,RZ+2.3);av.g.rotation.y=PI;sc.add(av.g);
+ const rg_=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,.03,24),B(0x20e8ff));rg_.position.y=.03;av.g.add(rg_)}
+function buildDriver(){if(drv){amb.remove(drv.g);amb.remove(drv.wh)}drv=mkChar(prof?prof.D:LK('m',1));drv.g.scale.setScalar(.85);drv.g.position.set(.5,.75,2.45);drv.al.rotation.x=drv.ar.rotation.x=-1.25;amb.add(drv.g);drv.wh=new THREE.Mesh(new THREE.TorusGeometry(.24,.035,6,16),M(0x1a1a1a));drv.wh.position.set(.5,1.62,2.95);drv.wh.rotation.x=-.9;amb.add(drv.wh)}
+function newGame(){reset();bag=[];score=prof?prof.sc||0:0;done=0;missed=0;day=1;dayT=.25;cur=null;buildPlan();Q=plan[0].slice();buildAv();buildDriver();chkTier(true);$('bPlay').textContent='Jugar'}
+// editor de avatar
+const hex=c=>'#'+c.toString(16).padStart(6,'0'),PX=4000,PZ=4000;let EL=null,step=0,pv=null;
+box(2,.1,2,M(0xffd0e8),PX,.05,PZ);
+function rebuildPv(){if(pv)sc.remove(pv.g);pv=mkChar(EL);pv.g.position.set(PX,.1,PZ);sc.add(pv.g)}
+function editCam(){const a=oy+Math.sin(t*.6)*.35;cam.position.set(PX+Math.sin(a)*3.7,1.1,PZ+Math.cos(a)*3.7);cam.lookAt(PX,1.05,PZ);cam.setViewOffset(innerWidth,innerHeight,0,innerHeight*.23,innerWidth,innerHeight);sc.background=EBG;if(pv){pv.al.rotation.x=Math.sin(t*2)*.06;pv.ar.rotation.x=-Math.sin(t*2)*.06;pv.g.position.y=.1+Math.sin(t*2)*.012}}
+function E(tg,c,x){const e=document.createElement(tg);if(c)e.className=c;if(x)e.textContent=x;return e}
+function openEd(){EL=prof.A;etab=0;oy=0;state='edit';$('menu').hidden=true;$('ed').hidden=false;$('eb').hidden=false;$('ebn').textContent=prof.n;K.gas=0;drawEd();rebuildPv()}
+let etab=0;const EBG=new THREE.Color(0x8ecbff),TMN={m:['Camiseta','Casaca clínica','Camisa','Bata blanca','Chaqueta','Chaleco','Polo','Sudadera'],f:['Blusa','Casaca clínica','Camisa','Bata blanca','Chaqueta','Vestido','Polo','Sudadera']},
+BMN={m:['Largo','Short','Cargo','Bermuda','Jogger','Jean','Clínico','Formal'],f:['Largo','Falda corta','Falda larga','Short','Leggins','Falda midi','Jogger','Palazzo']},
+SHN={m:['Mocasín','Deportiva','Bota','Formal','Sandalia','Zuecos','Plataforma','Zapatilla alta'],f:['Zapatilla','Tacos','Baleta','Botín','Sandalia taco','Zuecos','Plataforma','Zapatilla alta']},
+TABS=[['👤','Piel'],['💇','Cabello'],['👁','Ojos'],['👕','Ropa'],['👖','Pantalón'],['👟','Calzado'],['🕶','Extras']],THC=new Map(),
+FRM={h:[1.62,.42,.7],g:[1.68,.22],e:[1.67,.17],t:[1.2,.7],l:[.45,.5],f:[.12,.25,.7]};
+function thumb(L,fr){const o=mkChar(L);o.g.position.set(PX+30,0,PZ);o.g.rotation.y=fr[2]||0;sc.add(o.g);const c=new THREE.PerspectiveCamera(30,1,.1,60);c.position.set(PX+30,fr[0],PZ+fr[1]*4.5);c.lookAt(PX+30,fr[0],PZ);
+ const bg=sc.background,z=Math.round(96*rd.getPixelRatio()),k=document.createElement('canvas');k.width=k.height=96;
+ sc.background=new THREE.Color(0xdcecff);rd.setViewport(0,0,96,96);rd.setScissor(0,0,96,96);rd.setScissorTest(true);rd.render(sc,c);
+ k.getContext('2d').drawImage(rd.domElement,0,rd.domElement.height-z,z,z,0,0,96,96);
+ rd.setScissorTest(false);rd.setViewport(0,0,innerWidth,innerHeight);sc.background=bg;sc.remove(o.g);return k.toDataURL()}
+function sec(par,ti,key,n,fr,nm){par.appendChild(E('div','et',ti));const w=E('div','tg'),ck=key+fr+JSON.stringify(Object.assign({},EL,{[key]:0}));let im=THC.get(ck);
+ if(!im){im=[];for(let i=0;i<n;i++)im.push(thumb(Object.assign({},EL,{[key]:i}),fr));if(THC.size>80)THC.clear();THC.set(ck,im)}
+ for(let i=0;i<n;i++){const b=E('button','tb'+(EL[key]==i?' on':''));b.style.backgroundImage='url('+im[i]+')';b.appendChild(E('span','',nm[i]));b.onclick=()=>{EL[key]=i;drawEd();rebuildPv()};w.appendChild(b)}par.appendChild(w)}
+function chips(par,ti,key,n,arr){par.appendChild(E('div','et',ti));const w=E('div','sw');for(let i=0;i<n;i++){const b=E('button',EL[key]==i?'on':'');b.style.background=arr?hex(arr[i]):i<8?hex(BASEC[i]):'url('+mat(i).map.image.toDataURL()+')';b.onclick=()=>{EL[key]=i;drawEd();rebuildPv()};w.appendChild(b)}par.appendChild(w)}
+function drawEd(){const d=$('ed'),old=$('eg')?$('eg').scrollTop:0,f=EL.g=='f',tb=E('div'),g=E('div');tb.id='etb';g.id='eg';d.innerHTML='';
+ TABS.forEach((a,i)=>{const b=E('button',i==etab?'on':'');b.append(E('i','',a[0]),E('span','',a[1]));b.onclick=()=>{etab=i;drawEd()};tb.appendChild(b)});d.append(tb,g);
+ if(etab==0){g.appendChild(E('div','et','Personaje'));const w=E('div','sw2');['Femenino','Masculino'].forEach((s,i)=>{const b=E('button',(f?i==0:i==1)?'on':'',s);b.onclick=()=>{if((i==0)!=f){EL.g=i?'m':'f';EL.hr=0;EL.tm=0;EL.bm=0;EL.st=0;user.g=EL.g;drawEd();rebuildPv()}};w.appendChild(b)});g.appendChild(w);chips(g,'Tono de piel','sk',8,SKIN)}
+ else if(etab==1){sec(g,'Peinado','hr',8,FRM.h,HN[EL.g]);chips(g,'Color de cabello','hc',8,HAIRC)}
+ else if(etab==2){sec(g,'Forma de ojos','es',8,FRM.e,ESN);chips(g,'Color de ojos','ec',8,EYEC)}
+ else if(etab==3){sec(g,'Modelo','tm',8,FRM.t,TMN[EL.g]);chips(g,'Color o estampado','tp',15)}
+ else if(etab==4){sec(g,'Modelo','bm',8,FRM.l,BMN[EL.g]);chips(g,'Color o estampado','bt',15)}
+ else if(etab==5){sec(g,'Modelo','st',8,FRM.f,SHN[EL.g]);chips(g,'Color o estampado','sc',15)}
+ else{sec(g,'Lentes','gl',4,FRM.g,['Ninguno','Redondos','Cuadrados','De sol']);sec(g,'Gorro o sombrero','ht',5,FRM.h,['Ninguno','Quirúrgico','Gorra','Sombrero','Gorro de lana']);sec(g,'Tatuaje','tt',4,FRM.t,['Ninguno','Brazo','Ambos brazos','Cuello']);sec(g,'Extra','ex',5,FRM.t,['Ninguno','Estetoscopio','Mascarilla','Aretes','Reloj'])}
+ g.scrollTop=old}
+const hp=async(n,p)=>{const x=n+'|'+p+'|a911';try{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(x));return[...new Uint8Array(b)].map(v=>v.toString(16).padStart(2,'0')).join('')}catch(e){let h=5381;for(const c of x)h=((h<<5)+h+c.charCodeAt(0))|0;return'x'+h}};
+function renderLg(){const d=$('lg');d.innerHTML='';const h=E('h1','','🔐 Iniciar sesión');h.style.fontSize='22px';
+ const msg=E('p','','Ingresa tu usuario y contraseña'),un=E('input'),pw=E('input');un.placeholder='Usuario';un.maxLength=16;pw.placeholder='Contraseña';pw.type='password';
+ const ok=E('button','m pri','Entrar');ok.onclick=async()=>{const n=un.value.trim(),u=DB.users[n];if(!n||!pw.value){msg.textContent='⚠ Escribe usuario y contraseña';return}
+  if(!u){msg.textContent='⚠ Ese usuario no existe en este dispositivo';return}const x=await hp(n,pw.value);
+  if(!u.pw)u.pw=x;else if(u.pw!=x){msg.textContent='⚠ Contraseña incorrecta';pw.value='';return}
+  login(n);saveU();newGame();play()};
+ const nm=E('input'),ps=E('input'),ag=E('input'),hs=E('input');nm.placeholder='Nuevo usuario';nm.maxLength=16;ps.placeholder='Contraseña (mín. 4)';ps.type='password';ag.placeholder='Edad';ag.type='number';hs.placeholder='Hospital (opcional)';hs.maxLength=24;
+ let gi=0;const gb=E('button','m','👩 Obstetra mujer');gb.onclick=()=>{gi^=1;gb.textContent=gi?'👨 Obstetra hombre':'👩 Obstetra mujer'};
+ const go=E('button','m pri','Crear y diseñar avatar');go.onclick=async()=>{const n=nm.value.trim();if(!n){msg.textContent='⚠ Escribe un nombre de usuario';return}
+  if(DB.users[n]){msg.textContent='⚠ Ese usuario ya existe';return}if(ps.value.length<4){msg.textContent='⚠ La contraseña debe tener al menos 4 caracteres';return}
+  DB.users[n]={n,a:+ag.value||25,h:(hs.value||'').trim(),A:LK(gi?'m':'f',0),D:LK(gi?'f':'m',1),sc:0,pw:await hp(n,ps.value)};login(n);saveU();openEd(0)};
+ const bk=E('button','m','Volver');bk.onclick=()=>show('home');d.append(h,msg,un,pw,ok,E('p','','Crear usuario nuevo'),nm,ps,ag,hs,gb,go,bk)}
+// sala y preguntas
+let QL=[],ph=0,pt=0,dl=0,DL=[],qa=0,qt=10,qk=-1,dT=5;
+const GQ=[['¿Qué haces antes de examinar a una paciente?',['Lavarte las manos y presentarte','Empezar sin hablar','Nada en especial'],0,'La higiene de manos y presentarte previenen infecciones y generan confianza.'],
+['¿Cuál es un signo de alarma en el embarazo?',['Sangrado vaginal','Antojos','Sueño ligero'],0,'Sangrado, pérdida de líquido, dolor de cabeza intenso o falta de movimientos del bebé requieren atención inmediata.'],
+['¿Qué suplemento previene defectos del tubo neural?',['Ácido fólico','Cafeína','Vitamina C sola'],0,'El ácido fólico antes y al inicio del embarazo reduce defectos del tubo neural.'],
+['¿Por qué se toma la presión en cada control prenatal?',['Para detectar hipertensión o preeclampsia','Por costumbre','Para medir la talla'],0,'La presión alta puede ser la primera señal de preeclampsia.'],
+['La madre nota que el bebé se mueve menos. ¿Qué haces?',['Esperar una semana','Evaluar el bienestar fetal de inmediato','Decirle que es normal'],1,'La disminución de movimientos fetales puede indicar sufrimiento del bebé y se evalúa sin demora.'],
+['La paciente está muy asustada. ¿Qué haces?',['Escucharla y explicarle con calma','Ignorarla','Usar términos técnicos rápido'],0,'La comunicación empática reduce el miedo y mejora la colaboración.'],
+['¿Qué posición favorece el descanso en el tercer trimestre?',['De costado, mejor el izquierdo','Boca arriba plana','Boca abajo'],0,'De costado mejora la circulación hacia el bebé; boca arriba prolongada puede comprimir la vena cava.'],
+['¿Qué ayuda a prevenir la anemia en el embarazo?',['Alimentos ricos en hierro y suplemento indicado','Solo gaseosas','Saltarse comidas'],0,'El hierro (sangrecita, lentejas, carnes) y la vitamina C favorecen su absorción.'],
+['Antes de un procedimiento, ¿qué corresponde?',['Pedir consentimiento informado','Hacerlo sin avisar','Esperar a que ella pregunte'],0,'La paciente tiene derecho a conocer y decidir sobre su atención.'],
+['¿Qué se debe evitar durante el embarazo?',['Alcohol y tabaco','Caminar suave','Tomar agua'],0,'El alcohol y el tabaco dañan el desarrollo del bebé.'],
+['¿Hasta cuándo se recomienda la lactancia exclusiva?',['Hasta los 6 meses','Hasta el mes','Hasta los 2 meses'],0,'La OMS recomienda lactancia materna exclusiva durante los primeros 6 meses.']];
+const sq=q=>{const o=sh(q[1].map((t,i)=>[t,i==q[2]]));return[q[0],o.map(a=>a[0]),o.findIndex(a=>a[1]),q[3]]};function mkQL(){const b=cs().q.concat(cx==2?COMP:[]).map(sq),ex=sh(GQ.slice());while(b.length<6&&ex.length)b.push(sq(ex.pop()));return b.slice(0,6)}
+const mkr=new THREE.Mesh(new THREE.ConeGeometry(.25,.5,4),B(0xffd23f));mkr.rotation.x=PI;mkr.visible=false;sc.add(mkr);
+const SPX=RX-2.1,SPZ=RZ+.9,near_=()=>{const p=av.g.position;return Math.abs(p.x-SPX)<.9&&Math.abs(p.z-SPZ)<1.2};const rng=new THREE.Mesh(new THREE.RingGeometry(.55,.75,28),B(0x20e8ff));rng.rotation.x=-PI/2;rng.position.set(SPX,.14,SPZ);rng.visible=false;sc.add(rng);
+function pj(e,x,y,z){cam.updateMatrixWorld();nv_.set(x,y,z).project(cam);e.hidden=nv_.z>1;e.style.left=(nv_.x*.5+.5)*innerWidth+'px';e.style.top=(-nv_.y*.5+.5)*innerHeight+'px'}
+function rph0(){const y=META[cs().t].s,nm=prof?prof.n:'tu obstetra';DL=[['o','Hola, soy '+nm+', tu obstetra. ¿Qué te pasa?'],['p',cx==2?'¡Estoy sangrando mucho y me siento muy débil!':'Tengo '+y+' ('+wlab()+').'],['o','Tranquila, ya estoy contigo. Te haré unas preguntas.']];
+ ph=1;dl=0;pt=0;qk=-1;mkr.visible=rng.visible=true;$('hn').hidden=false;$('hn').textContent='🚶 Colócate al lado derecho de la paciente (círculo celeste)'}
+function dnx(){dl++;pt=0;if(dl>=DL.length){ph=3;$('bo').hidden=$('bp').hidden=$('hn').hidden=true;$('rpn').hidden=false;$('rv').hidden=false;quiz()}}
+function rph(dt){const bo=$('bo'),bp=$('bp');if(ph==3){if(qk!==qi){qk=qi;qa=0;qt=10;$('qtb').hidden=false}if(!qa){qt-=dt;$('qtf').style.width=cl(qt/10,0,1)*100+'%';$('qtn').textContent='⏱ '+Math.max(0,Math.ceil(qt))+' s';if(qt<=0)ans(-1)}}if(ph!=2){bo.hidden=bp.hidden=true}if(!ph||ph==3){mkr.visible=rng.visible=false;return}
+ if(ph==1){mkr.position.set(SPX,2+Math.sin(t*4)*.12,SPZ);if(near_()){ph=2;dl=0;pt=0;mkr.visible=rng.visible=false;K.dU=K.dD=K.dL=K.dR=0;$('hn').textContent='Toca la pantalla o pulsa Espacio para continuar';const p=av.g.position;av.g.rotation.y=Math.atan2(RX-p.x,RZ+.9-p.z)}return}
+ pt+=dt;if(pt>3.6){dnx();if(ph!=2)return}
+ const o=DL[dl][0]=='o';bo.hidden=!o;bp.hidden=o;const e=o?bo:bp;e.innerHTML='<small>'+(o?(prof?prof.n:'Obstetra'):'Paciente')+'</small>'+DL[dl][1];
+ if(o)pj(bo,av.g.position.x,2.9,av.g.position.z);else pj(bp,RX,1.9,RZ+.9)}
+addEventListener('pointerdown',()=>{if(ph==2&&pt>.3)dnx()});addEventListener('keydown',e=>{if(ph==2&&pt>.3&&(e.code=='Space'||e.code=='Enter'))dnx()});
+let ntA=0;function ntInit(){ntA=0;$('nt').classList.remove('mini');$('ntk').textContent='📞 NUEVA EMERGENCIA · Día '+day;$('ntd').textContent='Paciente de '+wlab()+': '+META[cs().t].s+' · a '+Math.round(dist(P,tgt))+' m';$('nt').hidden=false}
+function ntUpd(dt){ntA+=dt;$('nt').hidden=ntA>6;if(ntA>6)return;$('ntl').textContent=ms==1?'① Ve por la paciente · sigue el GPS':'② Llévala al hospital';$('ntt').textContent=Math.max(0,Math.ceil(tl))+' s';$('ntf').style.width=cl(tl/tlT,0,1)*100+'%';$('ntf').style.background=tl/tlT<.15?'#e5233b':'#2f8cff'}
+function enterRoom(g){done++;bellies(cs().w+(cs().d||0)/7);QL=mkQL();setRoom();gain=g;qi=0;qp=0;oy=0;op=0;zm=1;if(av){av.g.position.set(RX+5,0,RZ+3.8);av.g.rotation.y=-PI/2}state='room';K.gas=K.brk=K.lft=K.rgt=0;hudv('hidden');$('rm').hidden=false;$('rpn').hidden=true;$('rv').hidden=true;rph0()}
+function quiz(){const q=QL[qi],o=$('ro');$('rg').textContent='🤰 '+wlab()+' · '+ROOMN[rkey()]+' · '+['estable','⚠ complicada','🩸 hemorragia'][cx];
+ vit();$('rt').textContent='Pregunta '+(qi+1)+' de '+QL.length;$('rd').innerHTML=QL.map((_,i)=>'<i class="'+(i<qi?'d':i==qi?'c':'')+'"></i>').join('');$('rq').textContent=q[0];$('rf').textContent='';o.innerHTML='';
+ q[1].forEach((s,i)=>{const b=E('button','m',s);b.onclick=()=>ans(i);o.appendChild(b)})}
+function ans(i){const q=QL[qi],ok=i==q[2],o=$('ro');qa=1;if(ok)qp++;[...o.children].forEach((b,j)=>{b.disabled=true;if(j==q[2])b.classList.add('ok');else if(j==i)b.classList.add('bad')});
+ $('rf').textContent=(ok?'✅ ¡Correcto! ':i<0?'⏱ Se acabó el tiempo. Mejor opción: ':'💡 Mejor opción: ')+q[3];const n=QL.length,b=E('button','m pri',qi<n-1?'Siguiente':'Finalizar');b.onclick=()=>{qi++;qi<n?quiz():endRoom()};o.appendChild(b)}
+function endRoom(){ph=0;$('qtb').hidden=true;const n=QL.length,wr=n-qp,qpts=Math.max(0,3-.5*wr),fin=gain+qpts;score+=fin;saveU();const tu=chkTier();const r1=rank()[1];
+ $('vt').innerHTML='';$('rt').textContent='🍼 Paciente atendida · '+done+' esta semana';$('rd').innerHTML='';$('rq').textContent='Traslado '+gain+'/2 · Preguntas '+qpts+'/3 → +'+fin+' pts';
+ $('rf').textContent=(r1!=rk0?'🎓 ¡Subiste de nivel! '+r1:r1+' · '+score+' pts')+(tu?' · 🏥 ¡Tu hospital se renovó: '+TN[HT()]+'!':HT()<11?' · mejora del hospital a los '+(HT()+1)*50+' pts':'');
+ nextBtn('Volver a la ciudad',()=>{$('rm').hidden=true;hudv('');state='play';ch=P.h;cam.position.set(P.x-Math.sin(P.h)*13,6,P.z-Math.cos(P.h)*13)})}
+[['f',2,1,1,1,[[-2.2,-2.2],[-1.5,2.6],[-3.6,.5],[-2.4,-3.8]]],['m',5,2,2,0,[[2.6,-2.4],[3.4,.8],[2.2,3.2],[1.4,-3.6]]],['f',3,4,3,2,[[.2,-3.4],[-1,3.6],[1.8,3.9],[.6,-2.6]]]].forEach((a,n)=>{const L=LK(a[0],0);L.sk=a[1];L.hr=a[2];L.tp=a[3];L.ht=a[4];L.ec=n+2;const o=mkChar(L);o.g.position.set(RX+a[5][0][0],0,RZ+a[5][0][1]);sc.add(o.g);STF.push({p:o,w:a[5].map(q=>[RX+q[0],RZ+q[1]]),i:n,pause:R()*2})});
+for(const s of STF.splice(0,2))sc.remove(s.p.g);$('ebk').onclick=()=>{$('ed').hidden=$('eb').hidden=true;state='menu';$('menu').hidden=false;show('home')};
+$('ebs').onclick=()=>{saveU();$('ed').hidden=$('eb').hidden=true;newGame();play()};
+buildDriver();
+requestAnimationFrame(loop);sync();
+</script></body></html>
