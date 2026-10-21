@@ -1,0 +1,8 @@
+{
+  "short_name": "Ambulancia911",
+  "name": "Ambulancia 911 Juego",
+  "start_url": "./index.html",
+  "background_color": "#ffffff",
+  "theme_color": "#e53e3e",
+  "display": "standalone"
+}
